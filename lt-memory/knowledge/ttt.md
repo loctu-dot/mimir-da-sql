@@ -62,6 +62,21 @@ AUM measures total balance across ALL accounts, including churned (may still hol
 **Cashout:** `cashout_gmv` + `cashout_napas_gmv` + `cashout_payment_gmv` + `cashout_stock_gmv` + `cashout_p2p_gmv` + `cashout_mp_gmv` + `cashout_payment_mp_gmv`
 Always COALESCE(col, 0). Using just `cashin_gmv` = ~50% of actual.
 
+### Pre-computed `netcash` Column (2026-03-11)
+Table now has a `netcash` column = total cashin - total cashout (pre-computed).
+**Use `SUM(netcash)` instead of the long formula.** Still need individual sub-channel columns for breakdowns.
+
+### Luôn lấy data tới MTD (2026-03-12)
+**KHÔNG hardcode ngày cuối.** Luôn dùng `CURRENT_DATE('+7') - 1` (hôm qua, timezone VN) làm upper bound.
+```sql
+-- ĐÚNG: lấy tới ngày gần nhất có data
+WHERE GRASS_DATE BETWEEN '2025-09-01' AND DATE_SUB(CURRENT_DATE('+7'), INTERVAL 1 DAY)
+
+-- SAI: hardcode ngày
+WHERE GRASS_DATE BETWEEN '2025-09-01' AND '2026-02-28'
+```
+MTD = Month-To-Date. Data TTT lag 1 ngày (hôm nay chưa có, hôm qua mới nhất).
+
 ### Column Names (2026-03-03)
 - Interest: `interest` (NOT `interest_gmv`)
 - Balance: `balance` (NOT `saving_balance`)
@@ -80,6 +95,29 @@ User attrition -8.4%. Weak savers churn months 1-3, power savers remain and comp
 
 ### Unfunded Users: 53% Ever-Funded vs 47% Never-Funded (2026-03-04)
 Of 1.17M unfunded Individual MAU: 623K (53%) = previously funded (reactivation 3-5× easier), 548K (47%) = never funded.
+
+### Chi phí Túi+ đầy đủ gồm 3 thành phần (2026-03-12)
+Khi nói "chi phí Túi+", phải tính ĐỦ 3 loại:
+
+| # | Chi phí | Column | Quy đổi VND | Mô tả |
+|---|---------|--------|-------------|-------|
+| 1 | **Cashback 0.1%** | `TOTAL_CASHBACK_GMV` | Đã là VND | Hoàn tiền khi user Túi+ thanh toán bằng TTT |
+| 2 | **Xu sinh lời (Coin Interest)** | `COIN_INTEREST` | `COIN_INTEREST / 2` | User Túi+ được sinh lời 8%/năm với xu MoMo |
+| 3 | **Xu SOF (Coin SOF)** | `COIN_SOF` | `COIN_SOF / 2` | Xu thưởng khi user Túi+ thanh toán hóa đơn/dịch vụ bằng nguồn tiền TTT |
+
+**Menh giá quy đổi: 2 xu MoMo = 1 VND**
+
+Tổng chi phí VND = `TOTAL_CASHBACK_GMV + COIN_INTEREST/2 + COIN_SOF/2`
+
+Columns phân loại (dùng để COUNT user):
+- `IS_COIN_INT`: user có nhận xu sinh lời hay không
+- `IS_COIN_SOF`: user có nhận xu SOF hay không
+- `IS_CASHBACK`: user có nhận cashback hay không
+
+### Doanh thu Túi+ = Subscription + Bundle (2026-03-12)
+- **Subscription**: Phí mua tier hàng tháng. Pre-2026: 9K flat. Post-2026: Silver=9K, Gold=19K, Platinum=49K. Upgrade chỉ trả chênh lệch (trong cùng tháng).
+- **Bundle voucher**: `PACKAGE_GMV` — doanh thu riêng từ bán gói voucher.
+- Detect subscription từ `PLUS_SEGMENT LIKE '%Buy%'` kết hợp daily LAG(TIER) để tính upgrade pricing.
 
 ## Mimir Trust
 - MAU/MFU: HIGH (exact match Feb 2026, correct REGEXP_EXTRACT + MAU_TYPE filter)

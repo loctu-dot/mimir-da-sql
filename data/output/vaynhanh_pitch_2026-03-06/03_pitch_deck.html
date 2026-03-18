@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vay Nhanh 2026-2027 | MoMo Strategy Deck</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink: #ae2070;
+  --pink-light: #d4478a;
+  --pink-glow: rgba(174, 32, 112, 0.35);
+  --pink-bg: rgba(174, 32, 112, 0.08);
+  --dark: #0a0a12;
+  --dark-card: #12121e;
+  --dark-card-hover: #1a1a2e;
+  --surface: #16162a;
+  --border: rgba(174, 32, 112, 0.2);
+  --text: #e8e6f0;
+  --text-dim: #8a879e;
+  --text-bright: #ffffff;
+  --green: #4caf50;
+  --green-dim: rgba(76, 175, 80, 0.15);
+  --red: #f44336;
+  --red-dim: rgba(244, 67, 54, 0.15);
+  --orange: #ff9800;
+  --blue: #48c4e7;
+  --blue-dim: rgba(72, 196, 231, 0.15);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  background: var(--dark);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+.deck { width: 100vw; height: 100vh; position: relative; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  padding: 48px 64px;
+  opacity: 0; visibility: hidden;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--pink) transparent;
+}
+
+.slide.active { opacity: 1; visibility: visible; transform: translateY(0); }
+.slide::-webkit-scrollbar { width: 4px; }
+.slide::-webkit-scrollbar-track { background: transparent; }
+.slide::-webkit-scrollbar-thumb { background: var(--pink); border-radius: 4px; }
+
+/* NAV */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 56px;
+  background: rgba(10, 10, 18, 0.92); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  z-index: 100; padding: 0 24px;
+}
+
+.nav-dot {
+  width: 32px; height: 5px; border-radius: 3px;
+  background: rgba(174, 32, 112, 0.2); cursor: pointer;
+  transition: all 0.3s ease; border: none; outline: none;
+}
+.nav-dot:hover { background: rgba(174, 32, 112, 0.5); }
+.nav-dot.active { background: var(--pink); width: 48px; }
+
+.nav-arrows {
+  position: fixed; bottom: 56px; right: 32px;
+  display: flex; gap: 8px; z-index: 100;
+}
+.nav-arrows button, .nav-counter { font-family: 'JetBrains Mono', monospace; }
+.nav-arrows button {
+  width: 40px; height: 40px; border-radius: 8px;
+  border: 1px solid var(--border); background: rgba(18, 18, 30, 0.9);
+  color: var(--text); font-size: 16px; cursor: pointer;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+}
+.nav-arrows button:hover { background: var(--pink); border-color: var(--pink); color: white; }
+
+.nav-counter {
+  position: fixed; bottom: 68px; left: 32px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; color: var(--text-dim); z-index: 100; letter-spacing: 1px;
+}
+
+/* SLIDE HEADER */
+.slide-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--pink-light); margin-bottom: 12px;
+  opacity: 0; transform: translateX(-10px); transition: all 0.5s ease 0.2s;
+}
+.slide.active .slide-tag { opacity: 1; transform: translateX(0); }
+
+.slide-title {
+  font-size: clamp(28px, 4vw, 48px); font-weight: 800;
+  color: var(--text-bright); line-height: 1.15; margin-bottom: 32px;
+  opacity: 0; transform: translateY(15px); transition: all 0.5s ease 0.3s;
+}
+.slide.active .slide-title { opacity: 1; transform: translateY(0); }
+.slide-title .accent { color: var(--pink); }
+
+/* COVER */
+.cover {
+  justify-content: center; align-items: center; text-align: center; padding: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(174, 32, 112, 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(72, 196, 231, 0.06) 0%, transparent 60%),
+    var(--dark);
+}
+.cover .logo-mark {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: linear-gradient(135deg, var(--pink), var(--pink-light));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900; color: white;
+  margin: 0 auto 40px; box-shadow: 0 8px 32px var(--pink-glow);
+  opacity: 0; transform: scale(0.8); transition: all 0.6s ease 0.2s;
+}
+.cover.active .logo-mark { opacity: 1; transform: scale(1); }
+.cover .cover-title {
+  font-size: clamp(36px, 5.5vw, 72px); font-weight: 900;
+  color: var(--text-bright); line-height: 1.1; margin-bottom: 16px;
+  opacity: 0; transform: translateY(20px); transition: all 0.6s ease 0.4s;
+}
+.cover.active .cover-title { opacity: 1; transform: translateY(0); }
+.cover .cover-sub {
+  font-size: clamp(16px, 2vw, 22px); font-weight: 300;
+  color: var(--text-dim); letter-spacing: 2px; margin-bottom: 48px;
+  opacity: 0; transition: all 0.6s ease 0.5s;
+}
+.cover.active .cover-sub { opacity: 1; }
+.cover .cover-meta {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--text-dim); letter-spacing: 2px;
+  opacity: 0; transition: all 0.6s ease 0.7s;
+}
+.cover.active .cover-meta { opacity: 0.6; }
+.cover .hero-number {
+  font-size: clamp(64px, 10vw, 120px); font-weight: 900;
+  background: linear-gradient(135deg, var(--pink), var(--pink-light), var(--blue));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin: 24px 0; opacity: 0; transform: scale(0.9); transition: all 0.6s ease 0.5s;
+}
+.cover.active .hero-number { opacity: 1; transform: scale(1); }
+
+/* CONTENT */
+.content {
+  flex: 1; display: flex; flex-direction: column; gap: 24px;
+  opacity: 0; transform: translateY(15px); transition: all 0.5s ease 0.4s;
+  padding-bottom: 80px;
+}
+.slide.active .content { opacity: 1; transform: translateY(0); }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.grid-23 { display: grid; grid-template-columns: 2fr 3fr; gap: 24px; }
+
+/* KPI */
+.kpi {
+  background: var(--dark-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px; position: relative; overflow: hidden;
+  transition: all 0.3s ease;
+}
+.kpi:hover { border-color: var(--pink-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(174, 32, 112, 0.1); }
+.kpi::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--pink), var(--pink-light));
+  opacity: 0; transition: opacity 0.3s;
+}
+.kpi:hover::before { opacity: 1; }
+.kpi-label { font-size: 12px; font-weight: 500; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+.kpi-value { font-size: clamp(28px, 3vw, 42px); font-weight: 800; color: var(--text-bright); line-height: 1.1; }
+.kpi-change {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600;
+  margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 6px;
+}
+.kpi-change.up { color: var(--green); background: var(--green-dim); }
+.kpi-change.down { color: var(--red); background: var(--red-dim); }
+.kpi-change.neutral { color: var(--blue); background: var(--blue-dim); }
+.kpi-sub { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+
+/* TABLE */
+.data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.data-table thead th {
+  background: var(--surface); color: var(--pink-light); font-weight: 600;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+  padding: 12px 16px; text-align: left; border-bottom: 2px solid var(--border);
+  position: sticky; top: 0;
+}
+.data-table thead th:first-child { border-radius: 10px 0 0 0; }
+.data-table thead th:last-child { border-radius: 0 10px 0 0; }
+.data-table tbody td { padding: 10px 16px; border-bottom: 1px solid rgba(174, 32, 112, 0.07); color: var(--text); font-variant-numeric: tabular-nums; }
+.data-table tbody tr:hover td { background: var(--pink-bg); }
+.data-table .num { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+.data-table .highlight { color: var(--text-bright); font-weight: 700; }
+.data-table .tag-green { color: var(--green); font-weight: 600; }
+.data-table .tag-red { color: var(--red); font-weight: 600; }
+.data-table .tag-pink { color: var(--pink-light); font-weight: 600; }
+.data-table .tag-blue { color: var(--blue); font-weight: 600; }
+.data-table .tag-orange { color: var(--orange); font-weight: 600; }
+
+/* CHART */
+.chart-box { background: var(--dark-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative; }
+.chart-box-title { font-size: 13px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+.chart-wrap { position: relative; width: 100%; height: 280px; }
+.chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+/* INSIGHT / CALLOUT */
+.insight-box {
+  background: var(--pink-bg); border-left: 3px solid var(--pink);
+  border-radius: 0 12px 12px 0; padding: 16px 20px;
+  font-size: 14px; line-height: 1.6; color: var(--text);
+}
+.insight-box strong { color: var(--pink-light); }
+.callout {
+  background: linear-gradient(135deg, rgba(174, 32, 112, 0.12), rgba(72, 196, 231, 0.06));
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: 24px 28px; font-size: 16px; line-height: 1.6; color: var(--text);
+}
+.callout strong { color: var(--pink-light); font-weight: 700; }
+.callout em { color: var(--blue); font-style: normal; font-weight: 600; }
+
+/* SWOT */
+.swot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.swot-card { background: var(--dark-card); border-radius: 16px; padding: 20px; border: 1px solid var(--border); }
+.swot-card h3 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.swot-card h3 .icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.swot-s h3 .icon { background: var(--green-dim); } .swot-s h3 { color: var(--green); }
+.swot-w h3 .icon { background: var(--red-dim); } .swot-w h3 { color: var(--red); }
+.swot-o h3 .icon { background: var(--blue-dim); } .swot-o h3 { color: var(--blue); }
+.swot-t h3 .icon { background: rgba(255, 152, 0, 0.15); } .swot-t h3 { color: var(--orange); }
+.swot-card ul { list-style: none; padding: 0; }
+.swot-card li { font-size: 13px; line-height: 1.5; padding: 6px 0 6px 16px; position: relative; color: var(--text); }
+.swot-card li::before { content: ''; position: absolute; left: 0; top: 13px; width: 6px; height: 6px; border-radius: 50%; }
+.swot-s li::before { background: var(--green); }
+.swot-w li::before { background: var(--red); }
+.swot-o li::before { background: var(--blue); }
+.swot-t li::before { background: var(--orange); }
+
+/* PILLAR */
+.pillar {
+  background: var(--dark-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px; position: relative; overflow: hidden;
+}
+.pillar::after {
+  content: attr(data-num); position: absolute; top: -8px; right: 12px;
+  font-size: 72px; font-weight: 900; color: rgba(174, 32, 112, 0.06); line-height: 1;
+}
+.pillar-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--pink); letter-spacing: 2px; margin-bottom: 8px; }
+.pillar h3 { font-size: 18px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px; }
+.pillar ul { list-style: none; padding: 0; margin-top: 8px; }
+.pillar li { font-size: 13px; color: var(--text); padding: 4px 0 4px 16px; position: relative; }
+.pillar li::before { content: '>'; position: absolute; left: 0; color: var(--pink); font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+/* PROJECTION TABLE */
+.proj-row { display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr; gap: 1px; margin-bottom: 1px; }
+.proj-cell { padding: 14px 20px; font-size: 14px; background: var(--dark-card); }
+.proj-cell:first-child { border-radius: 8px 0 0 8px; }
+.proj-cell:last-child { border-radius: 0 8px 8px 0; }
+.proj-header .proj-cell { background: var(--surface); font-weight: 700; color: var(--pink-light); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+.proj-cell .label { color: var(--text); font-weight: 500; }
+.proj-cell .value { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.proj-cell.actual .value { color: var(--text-bright); }
+.proj-cell.target .value { color: var(--pink-light); }
+.proj-cell.future .value { color: var(--blue); }
+
+/* ASK */
+.ask-item {
+  background: var(--dark-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px; display: flex; gap: 20px;
+  align-items: flex-start; transition: all 0.3s ease;
+}
+.ask-item:hover { border-color: var(--pink-light); transform: translateX(4px); }
+.ask-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--pink), var(--pink-light));
+  display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+}
+.ask-content h3 { font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 6px; }
+.ask-content p { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.ask-timeline { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--pink-light); margin-top: 6px; letter-spacing: 1px; }
+
+.kb-hint {
+  position: fixed; bottom: 66px; left: 50%; transform: translateX(-50%);
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  color: var(--text-dim); opacity: 0.4; letter-spacing: 1px; z-index: 100;
+}
+
+@media (max-width: 1024px) {
+  .slide { padding: 32px 40px; }
+  .grid-2, .grid-3, .grid-4, .swot-grid { grid-template-columns: 1fr 1fr; }
+  .grid-23 { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .slide { padding: 24px 20px; }
+  .grid-2, .grid-3, .grid-4, .swot-grid { grid-template-columns: 1fr; }
+  .proj-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide cover active" data-slide="0">
+  <div class="logo-mark">M</div>
+  <div class="cover-title">Vay Nhanh<br><span style="color:var(--pink)">2026–2027</span></div>
+  <div class="hero-number">24.2 nghìn tỷ</div>
+  <div class="cover-sub">Nền tảng cho vay không rủi ro &bull; Phân phối tối đa &bull; Tăng trưởng bền vững</div>
+  <div class="cover-meta">BÁO CÁO MẬT &nbsp;&bull;&nbsp; THÁNG 3/2026 &nbsp;&bull;&nbsp; MoMo Dịch Vụ Tài Chính</div>
+</div>
+
+<!-- SLIDE 1: THE NUMBERS -->
+<div class="slide" data-slide="1">
+  <div class="slide-tag">Tổng quan hiệu quả</div>
+  <div class="slide-title">2025: Năm bùng nổ <span class="accent">+296%</span></div>
+  <div class="content">
+    <div class="grid-4">
+      <div class="kpi">
+        <div class="kpi-label">Tổng giải ngân</div>
+        <div class="kpi-value">24.2T</div>
+        <div class="kpi-change up">+296% YoY</div>
+        <div class="kpi-sub">VND &bull; Cả năm 2025</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Số khoản vay</div>
+        <div class="kpi-value">1.56M</div>
+        <div class="kpi-change up">+127% YoY</div>
+        <div class="kpi-sub">Cả năm 2025</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Ticket trung bình</div>
+        <div class="kpi-value">15.5M</div>
+        <div class="kpi-change up">+57% YoY</div>
+        <div class="kpi-sub">VND &bull; từ 9.9M (2024)</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Tỷ lệ vay lại</div>
+        <div class="kpi-value">39%</div>
+        <div class="kpi-change up">+27pp</div>
+        <div class="kpi-sub">từ 12% (2024)</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="kpi">
+        <div class="kpi-label">Run-rate tháng 12/2025</div>
+        <div class="kpi-value">3,129 tỷ</div>
+        <div class="kpi-change up">+220% so với T1</div>
+        <div class="kpi-sub">VND/tháng</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Run-rate 2026 (quy năm)</div>
+        <div class="kpi-value">~33.7T</div>
+        <div class="kpi-change up">+39% so với 2025</div>
+        <div class="kpi-sub">Dựa trên T1-T2/2026</div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Điểm nhấn:</strong> Vay Nhanh tăng trưởng <strong>6.9 lần</strong> trong 24 tháng (T1/2024: 454 tỷ &rarr; T12/2025: 3,129 tỷ).
+      Điểm ngoặt: <em>tháng 6/2025</em> khi ticket trung bình nhảy từ 12.8 triệu lên 15.7 triệu (+49% MoM).
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: GROWTH TRAJECTORY -->
+<div class="slide" data-slide="2">
+  <div class="slide-tag">Xu hướng hàng tháng</div>
+  <div class="slide-title">Đường tăng trưởng <span class="accent">liên tục</span></div>
+  <div class="content">
+    <div class="chart-box" style="flex:1">
+      <div class="chart-box-title">Giải ngân hàng tháng (tỷ VND) — 2024 so với 2025</div>
+      <div class="chart-wrap" style="height: 380px">
+        <canvas id="chartMonthly"></canvas>
+      </div>
+    </div>
+    <div class="insight-box">
+      <strong>T1/2024 &rarr; T2/2026:</strong> Từ 454 tỷ lên 2,515 tỷ VND/tháng. H2/2025 chiếm 65% tổng năm.
+      Bước ngoặt tháng 6/2025: thêm đối tác mới + tăng ticket &rarr; <strong>chuyển đổi vĩnh viễn.</strong>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: LENDER ECOSYSTEM -->
+<div class="slide" data-slide="3">
+  <div class="slide-tag">Hệ sinh thái đối tác</div>
+  <div class="slide-title">Đa dạng hóa <span class="accent">đối tác cho vay</span></div>
+  <div class="content">
+    <div class="grid-2">
+      <div class="chart-box">
+        <div class="chart-box-title">Tỷ trọng đối tác 2024</div>
+        <div class="chart-wrap" style="height:250px">
+          <canvas id="chartLender2024"></canvas>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-box-title">Tỷ trọng đối tác 2025</div>
+        <div class="chart-wrap" style="height:250px">
+          <canvas id="chartLender2025"></canvas>
+        </div>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Năm</th><th>Đối tác</th><th>Khoản vay</th><th>Giải ngân (tỷ)</th><th>TB (triệu)</th><th>Tỷ trọng</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2024</td><td class="highlight">AMBER</td><td class="num">471,699</td><td class="num">4,851</td><td class="num">10.3</td><td class="tag-pink">69%</td></tr>
+        <tr><td>2024</td><td>MCREDIT</td><td class="num">154,104</td><td class="num">1,509</td><td class="num">9.8</td><td class="num">22%</td></tr>
+        <tr><td>2024</td><td>VIET_CREDIT</td><td class="num">62,256</td><td class="num">747</td><td class="num">12.0</td><td class="num">9%</td></tr>
+        <tr style="border-top:2px solid var(--border)"><td>2025</td><td class="highlight">VIET_CREDIT</td><td class="num">979,683</td><td class="num">15,663</td><td class="num">16.0</td><td class="tag-pink">63%</td></tr>
+        <tr><td>2025</td><td>MCREDIT</td><td class="num">316,293</td><td class="num">5,104</td><td class="num">16.1</td><td class="num">20%</td></tr>
+        <tr><td>2025</td><td>AMBER</td><td class="num">264,464</td><td class="num">3,411</td><td class="num">12.9</td><td class="num">14%</td></tr>
+        <tr style="border-top:2px solid var(--border)"><td>2026*</td><td class="highlight">VIET_CREDIT</td><td class="num">208,491</td><td class="num">3,933</td><td class="num">18.9</td><td class="tag-pink">66%</td></tr>
+        <tr><td>2026*</td><td>MCREDIT</td><td class="num">59,113</td><td class="num">978</td><td class="num">16.5</td><td class="num">19%</td></tr>
+        <tr><td>2026*</td><td>AMBER</td><td class="num">31,984</td><td class="num">474</td><td class="num">14.8</td><td class="num">10%</td></tr>
+        <tr><td>2026*</td><td class="tag-blue">MBV (MỚI)</td><td class="num">15,161</td><td class="num">239</td><td class="num">15.8</td><td class="tag-green">5%</td></tr>
+      </tbody>
+    </table>
+    <div class="insight-box">
+      <strong>Chuyển đổi chiến lược:</strong> Từ AMBER độc quyền (69%) sang VIET_CREDIT dẫn đầu (63%).
+      <strong>MBV (MB Bank)</strong> gia nhập cuối 2025 với tỷ lệ duyệt <strong>80.2%</strong> — cao nhất trong 4 đối tác.
+      <strong>Lưu ý:</strong> VietCredit lỗ kỷ lục 152 tỷ năm 2024, cắt 86% nhân sự — nhưng 22% dư nợ VietCredit đến từ kênh số MoMo, cho thấy VietCredit <em>phụ thuộc MoMo</em>, không phải ngược lại.
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: CREDIT QUALITY -->
+<div class="slide" data-slide="4">
+  <div class="slide-tag">Hồ sơ rủi ro</div>
+  <div class="slide-title">Chất lượng tín dụng: <span class="accent">MoMo không chịu rủi ro</span></div>
+  <div class="content">
+    <div class="grid-2">
+      <div class="chart-box">
+        <div class="chart-box-title">Nợ xấu (DPD90) theo Vintage — MOB 3-8</div>
+        <div class="chart-wrap" style="height:280px">
+          <canvas id="chartNPL"></canvas>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="kpi">
+          <div class="kpi-label">Nợ xấu tại MOB8 (vintage T7/2025)</div>
+          <div class="kpi-value">5.96%</div>
+          <div class="kpi-change neutral">Mức chuẩn fintech VN</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Nợ xấu tại MOB5 (vintage T10/2025)</div>
+          <div class="kpi-value" style="color:var(--green)">1.46%</div>
+          <div class="kpi-change up">Đang cải thiện</div>
+        </div>
+        <div class="kpi" style="border-color: var(--green); background: var(--green-dim);">
+          <div class="kpi-label">Rủi ro tín dụng MoMo</div>
+          <div class="kpi-value" style="color:var(--green)">0%</div>
+          <div class="kpi-sub" style="color:var(--green)">Mô hình nhẹ vốn — Đối tác chịu toàn bộ nợ xấu</div>
+        </div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Mô hình độc đáo:</strong> MoMo là <em>nền tảng phân phối</em>, không giữ rủi ro tín dụng trên bảng cân đối.
+      5-6% nợ xấu tại MOB8 = mức chấp nhận được cho fintech tiêu dùng VN.
+      Các vintage gần đây (MOB5 = 1.46%) cho thấy chất lượng <strong>đang cải thiện.</strong>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: MARKET OPPORTUNITY -->
+<div class="slide" data-slide="5">
+  <div class="slide-tag">Quy mô thị trường</div>
+  <div class="slide-title">Cơ hội thị trường <span class="accent">~2.900 nghìn tỷ VND</span></div>
+  <div class="content">
+    <div class="grid-3">
+      <div class="kpi">
+        <div class="kpi-label">Tín dụng tiêu dùng VN</div>
+        <div class="kpi-value">~2,900T</div>
+        <div class="kpi-sub">VND (~$113 tỷ) &bull; 21.5% tổng tín dụng</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Thị trường BNPL 2025</div>
+        <div class="kpi-value">$2.6 tỷ</div>
+        <div class="kpi-change up">+36.5% YoY</div>
+        <div class="kpi-sub">&rarr; $8.5 tỷ vào 2030 (27% CAGR)</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Độ thâm nhập Vay Nhanh</div>
+        <div class="kpi-value">0.8%</div>
+        <div class="kpi-sub">24.2T / tổng tín dụng tiêu dùng</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="chart-box">
+        <div class="chart-box-title">Dư địa thâm nhập trong user base MoMo</div>
+        <div class="chart-wrap" style="height:250px">
+          <canvas id="chartPenetration"></canvas>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="kpi" style="flex:1">
+          <div class="kpi-label">Ví MoMo</div>
+          <div class="kpi-value">30 triệu+</div>
+          <div class="kpi-sub">Chỉ 0.5% dùng Vay Nhanh mỗi tháng</div>
+        </div>
+        <div class="kpi" style="flex:1">
+          <div class="kpi-label">Nhóm bán chéo</div>
+          <div class="kpi-value">1.59 triệu</div>
+          <div class="kpi-sub">Người dùng VietQR chưa có sản phẩm tài chính</div>
+        </div>
+        <div class="kpi" style="flex:1">
+          <div class="kpi-label">Paylater ngưng hoạt động</div>
+          <div class="kpi-value">995 nghìn</div>
+          <div class="kpi-sub">Có thể tái kích hoạt sang Vay Nhanh</div>
+        </div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="insight-box">
+        <strong>Thuận lợi pháp lý:</strong> Nghị định 94/2025 — Sandbox Fintech (hiệu lực T7/2025).
+        Hạn mức vay tăng 4 lần ($4K &rarr; $16K). Hạn mức ví tăng 3 lần ($4K &rarr; $12K).
+        Từ 2026, NHNN <strong>bỏ cơ chế room tín dụng</strong> cho từng ngân hàng.
+      </div>
+      <div class="insight-box">
+        <strong>So sánh khu vực:</strong> Nợ hộ gia đình/GDP: Việt Nam <strong>26.5%</strong> (Thái Lan 91.6%, Indo 16.6%).
+        Tỷ lệ sở hữu thẻ tín dụng VN chỉ <strong>3%</strong> — dư địa rất lớn cho cho vay tiêu dùng số.
+        GDP tăng trưởng <strong>6.8%</strong> (WB 2025) &rarr; thuận lợi cho tín dụng.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: COMPETITIVE LANDSCAPE -->
+<div class="slide" data-slide="6">
+  <div class="slide-tag">Bức tranh cạnh tranh</div>
+  <div class="slide-title">Đối thủ: MoMo là <span class="accent">duy nhất không chịu rủi ro</span></div>
+  <div class="content">
+    <table class="data-table">
+      <thead>
+        <tr><th>Đối thủ</th><th>Mô hình</th><th>Giải ngân/tháng</th><th>Dư nợ / Quy mô</th><th>Nợ xấu</th><th>Tình hình 2024-25</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="highlight">FE Credit</td><td>Bảng cân đối</td><td class="num">~5-6T</td><td class="num">62,000T</td><td class="num">&lt;3% (hợp nhất)</td><td class="tag-green">Phục hồi: LN 515 tỷ (từ lỗ 2,965 tỷ)</td></tr>
+        <tr><td class="highlight">Home Credit</td><td>Bảng cân đối</td><td class="num">~2-2.5T</td><td class="num">27,337T</td><td class="tag-green">1.76%</td><td class="tag-green">Lãi kỷ lục 1,291 tỷ, SCBX mua lại</td></tr>
+        <tr style="background:var(--pink-bg)"><td class="highlight" style="color:var(--pink-light)">MoMo Vay Nhanh</td><td class="tag-pink">Nền tảng</td><td class="num tag-pink">2.5-3.1T</td><td class="tag-pink">0 (không rủi ro)</td><td class="tag-green">0%</td><td class="tag-pink">+296% YoY, 4 đối tác</td></tr>
+        <tr><td class="highlight">VietCredit</td><td>Bảng cân đối</td><td class="num">~1.5-2T</td><td class="num">6,300T</td><td class="num">Cao</td><td class="tag-red">Lỗ 152 tỷ, cắt 86% nhân sự</td></tr>
+        <tr><td class="highlight">MCredit (MB)</td><td>Bảng cân đối</td><td class="num">N/A</td><td class="num">28,422T</td><td class="num">6.7%</td><td class="tag-green">H1/25 phục hồi, 3.7 triệu KH</td></tr>
+        <tr><td class="highlight">SeaMoney</td><td>Lai ghép</td><td class="num">N/A (VN)</td><td class="num">$9.2B SEA</td><td class="tag-green">1.1%</td><td class="tag-red">+300% off-platform, $3.8B revenue</td></tr>
+        <tr><td class="highlight">Cake (VPBank)</td><td>Ngân hàng số</td><td class="num">N/A</td><td class="num">6.2 triệu users</td><td class="num">N/A</td><td class="tag-orange">+225% thu nhập, có lãi đầu tiên</td></tr>
+        <tr><td class="highlight">F88</td><td>Cầm đồ + vay</td><td class="num">N/A</td><td class="num">888 chi nhánh</td><td class="num">N/A</td><td class="tag-green">LN +320% H1/25, doanh thu 1,744 tỷ</td></tr>
+      </tbody>
+    </table>
+    <div class="grid-2">
+      <div class="chart-box">
+        <div class="chart-box-title">So sánh giải ngân hàng tháng (tỷ VND, ước tính)</div>
+        <div class="chart-wrap" style="height:250px">
+          <canvas id="chartCompetitor"></canvas>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="callout">
+          <strong>Khác biệt cốt lõi:</strong> MoMo là <em>người chơi duy nhất</em> không giữ rủi ro tín dụng trên bảng cân đối.
+          Mọi đối thủ khác đều gánh nợ xấu trực tiếp.
+        </div>
+        <div class="insight-box">
+          <strong>Đe doạ chính:</strong> SeaMoney tăng cho vay ngoài nền tảng <strong>+300% YoY</strong> toàn SEA.
+          Cake đạt <strong>+225% thu nhập</strong>, là ngân hàng số có lãi đầu tiên tại VN.
+          F88 tăng <strong>+320% lợi nhuận</strong> với mô hình cầm đồ + vay.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: SWOT -->
+<div class="slide" data-slide="7">
+  <div class="slide-tag">Đánh giá chiến lược</div>
+  <div class="slide-title">Phân tích <span class="accent">SWOT</span></div>
+  <div class="content">
+    <div class="swot-grid">
+      <div class="swot-card swot-s">
+        <h3><span class="icon">S</span> Điểm mạnh</h3>
+        <ul>
+          <li><strong>Nhẹ vốn:</strong> Không chịu nợ xấu — thuần phí nền tảng</li>
+          <li><strong>30 triệu+ người dùng:</strong> User base ví điện tử lớn nhất VN</li>
+          <li><strong>64% vay lại:</strong> Động cơ giữ chân khách hàng tự nhiên</li>
+          <li><strong>Duyệt 1 phút:</strong> Nhanh nhất thị trường</li>
+          <li><strong>60+ domain dữ liệu:</strong> Lợi thế chấm điểm tín dụng độc quyền</li>
+          <li><strong>22% dư nợ VietCredit</strong> đến từ MoMo — đối tác phụ thuộc ta</li>
+        </ul>
+      </div>
+      <div class="swot-card swot-w">
+        <h3><span class="icon">W</span> Điểm yếu</h3>
+        <ul>
+          <li><strong>VietCredit 66%:</strong> Tập trung 1 đối tác quá cao</li>
+          <li><strong>Tỷ lệ duyệt giảm:</strong> 74% &rarr; 69% trong 6 tháng</li>
+          <li><strong>Trần ticket 18 triệu:</strong> Home Credit cho vay tới 250 triệu</li>
+          <li><strong>Không có giấy phép:</strong> Phụ thuộc đối tác sẵn lòng cho vay</li>
+          <li><strong>Doanh thu không minh bạch:</strong> Phí MoMo không có trong BQ</li>
+        </ul>
+      </div>
+      <div class="swot-card swot-o">
+        <h3><span class="icon">O</span> Cơ hội</h3>
+        <ul>
+          <li><strong>MBV đa dạng hóa:</strong> Tỷ lệ duyệt 80.2% — giảm phụ thuộc VC</li>
+          <li><strong>BNPL $8.5 tỷ:</strong> Thị trường tăng 27% CAGR đến 2030</li>
+          <li><strong>Hạn mức vay tăng 4 lần:</strong> Từ $4K lên $16K (Nghị định mới)</li>
+          <li><strong>Bán chéo 1.59 triệu:</strong> User VietQR chưa có sản phẩm tài chính</li>
+          <li><strong>995 nghìn dormant:</strong> Paylater có thể tái kích hoạt</li>
+          <li><strong>Bỏ room tín dụng 2026:</strong> Ngân hàng dễ cho vay hơn</li>
+        </ul>
+      </div>
+      <div class="swot-card swot-t">
+        <h3><span class="icon">T</span> Đe doạ</h3>
+        <ul>
+          <li><strong>SeaMoney:</strong> $9.2 tỷ dư nợ, off-platform +300%</li>
+          <li><strong>Cake:</strong> 6.2 triệu user, thu nhập +225%, có lãi</li>
+          <li><strong>VietCredit độc lập:</strong> Ra thẻ tín dụng riêng</li>
+          <li><strong>FE Credit số hóa:</strong> FE ONLINE 2.0, AWS, AI chatbot</li>
+          <li><strong>F88 mở rộng:</strong> 888 chi nhánh, LN +320%</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8: STRATEGY 2026-2027 -->
+<div class="slide" data-slide="8">
+  <div class="slide-tag">Chiến lược</div>
+  <div class="slide-title">4 trụ cột chiến lược <span class="accent">2026–2027</span></div>
+  <div class="content">
+    <div class="grid-2">
+      <div class="pillar" data-num="01">
+        <div class="pillar-num">TRỤ CỘT 01</div>
+        <h3>Đa dạng hóa đối tác cho vay</h3>
+        <ul>
+          <li>Mục tiêu: 6+ đối tác, tối đa 40% tập trung</li>
+          <li>Onboard 2 ngân hàng mới (sau thành công MBV 80%)</li>
+          <li>Tăng ticket trung bình: 25-30 triệu vào 2027</li>
+          <li>Định tuyến thông minh: khớp user với đối tác phù hợp</li>
+        </ul>
+      </div>
+      <div class="pillar" data-num="02">
+        <div class="pillar-num">TRỤ CỘT 02</div>
+        <h3>Mở rộng sản phẩm</h3>
+        <ul>
+          <li>Vay có tài sản đảm bảo (hạn mức lớn hơn)</li>
+          <li>BNPL tích hợp với hệ sinh thái merchant MoMo</li>
+          <li>Định giá theo rủi ro: phí cao/thấp theo hồ sơ KH</li>
+          <li>Micro-loan cho phân khúc 1-5 triệu VND</li>
+        </ul>
+      </div>
+      <div class="pillar" data-num="03">
+        <div class="pillar-num">TRỤ CỘT 03</div>
+        <h3>Chấm điểm tín dụng bằng AI</h3>
+        <ul>
+          <li>Khai thác 60+ domain dữ liệu (thanh toán, TTT, bảo hiểm)</li>
+          <li>Tăng tỷ lệ duyệt về 75%+ mà giữ mức nợ xấu</li>
+          <li>Scoring-as-a-Service bán cho đối tác cho vay</li>
+          <li>Dashboard giám sát rủi ro thời gian thực</li>
+        </ul>
+      </div>
+      <div class="pillar" data-num="04">
+        <div class="pillar-num">TRỤ CỘT 04</div>
+        <h3>Máy bán chéo sản phẩm</h3>
+        <ul>
+          <li>1.59 triệu user VietQR &rarr; giới thiệu Vay Nhanh</li>
+          <li>995 nghìn dormant Paylater &rarr; chiến dịch tái kích hoạt</li>
+          <li>Paylater tốt nghiệp &rarr; Vay Nhanh ticket cao hơn</li>
+          <li>User TTT tiết kiệm &rarr; vay cá nhân cho đầu tư</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9: FINANCIAL PROJECTIONS -->
+<div class="slide" data-slide="9">
+  <div class="slide-tag">Dự báo tài chính</div>
+  <div class="slide-title">Kế hoạch tăng trưởng <span class="accent">2026–2027</span></div>
+  <div class="content">
+    <div class="chart-box">
+      <div class="chart-box-title">Giải ngân hàng năm (nghìn tỷ VND) — Thực tế và mục tiêu</div>
+      <div class="chart-wrap" style="height:300px">
+        <canvas id="chartProjection"></canvas>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1px">
+      <div class="proj-row proj-header">
+        <div class="proj-cell">Chỉ tiêu</div>
+        <div class="proj-cell">2025 (Thực tế)</div>
+        <div class="proj-cell">2026 (Mục tiêu)</div>
+        <div class="proj-cell">2027 (Mục tiêu)</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell"><span class="label">Tổng giải ngân</span></div>
+        <div class="proj-cell actual"><span class="value">24.2T VND</span></div>
+        <div class="proj-cell target"><span class="value">35T VND</span></div>
+        <div class="proj-cell future"><span class="value">45T VND</span></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell"><span class="label">Trung bình/tháng</span></div>
+        <div class="proj-cell actual"><span class="value">2.0T</span></div>
+        <div class="proj-cell target"><span class="value">2.9T</span></div>
+        <div class="proj-cell future"><span class="value">3.75T</span></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell"><span class="label">Số khoản vay</span></div>
+        <div class="proj-cell actual"><span class="value">1.56 triệu</span></div>
+        <div class="proj-cell target"><span class="value">2.0 triệu</span></div>
+        <div class="proj-cell future"><span class="value">2.4 triệu</span></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell"><span class="label">Ticket trung bình</span></div>
+        <div class="proj-cell actual"><span class="value">15.5 triệu</span></div>
+        <div class="proj-cell target"><span class="value">17.5 triệu</span></div>
+        <div class="proj-cell future"><span class="value">19 triệu</span></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell"><span class="label">Số đối tác</span></div>
+        <div class="proj-cell actual"><span class="value">4</span></div>
+        <div class="proj-cell target"><span class="value">6</span></div>
+        <div class="proj-cell future"><span class="value">8</span></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell"><span class="label">Tập trung tối đa</span></div>
+        <div class="proj-cell actual"><span class="value">63%</span></div>
+        <div class="proj-cell target"><span class="value">45%</span></div>
+        <div class="proj-cell future"><span class="value">40%</span></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell"><span class="label">Doanh thu nền tảng (ước tính)*</span></div>
+        <div class="proj-cell actual"><span class="value">120-240 tỷ</span></div>
+        <div class="proj-cell target"><span class="value">175-350 tỷ</span></div>
+        <div class="proj-cell future"><span class="value">225-450 tỷ</span></div>
+      </div>
+    </div>
+    <div class="insight-box">
+      <strong>Ghi chú:</strong> Phí nền tảng ước tính 0.5-1.0% trên giải ngân (chưa xác nhận chính xác trong BQ).
+      Doanh thu thực tế có thể cao hơn nếu tính cả Scoring-as-a-Service và hoa hồng bán chéo.
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 10: RISKS -->
+<div class="slide" data-slide="10">
+  <div class="slide-tag">Quản trị rủi ro</div>
+  <div class="slide-title">Rủi ro và <span class="accent">giải pháp</span></div>
+  <div class="content">
+    <table class="data-table">
+      <thead>
+        <tr><th style="width:25%">Rủi ro</th><th style="width:10%">Xác suất</th><th style="width:10%">Tác động</th><th style="width:55%">Giải pháp</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="highlight">VietCredit độc lập hóa</td><td class="tag-orange">Trung bình</td><td class="tag-red">Cao</td>
+          <td>Đẩy nhanh MBV + onboard 2 ngân hàng mới. Mục tiêu max 40% tập trung. Thực tế: VietCredit đang lỗ nặng (152 tỷ/2024), cắt 86% nhân sự — khó tách khỏi MoMo trong ngắn hạn.</td>
+        </tr>
+        <tr>
+          <td class="highlight">Nợ xấu tăng đột biến</td><td class="tag-green">Thấp</td><td class="tag-red">Cao</td>
+          <td>Tăng cường AI chấm điểm tín dụng. Thắt chặt tiêu chí khi có dấu hiệu cảnh báo sớm.</td>
+        </tr>
+        <tr>
+          <td class="highlight">SeaMoney vào VN mạnh</td><td class="tag-orange">Trung bình</td><td class="tag-orange">Trung bình</td>
+          <td>Khác biệt hóa tốc độ (1 phút duyệt) + bán chéo từ 30 triệu user base. SeaMoney chưa công bố số liệu VN riêng.</td>
+        </tr>
+        <tr>
+          <td class="highlight">Thay đổi pháp lý</td><td class="tag-orange">Trung bình</td><td class="tag-orange">Trung bình</td>
+          <td>Tham gia sandbox tích cực. Compliance-first. Nghị định 94/2025 thực tế <em>có lợi</em> cho MoMo (sandbox fintech, tăng hạn mức).</td>
+        </tr>
+        <tr>
+          <td class="highlight">Tỷ lệ duyệt giảm</td><td class="tag-red">Cao</td><td class="tag-orange">Trung bình</td>
+          <td>AI scoring + nhiều đối tác = nhiều lựa chọn hơn cho user. MBV có tỷ lệ duyệt 80.2%.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="grid-2" style="margin-top:12px">
+      <div class="kpi" style="border-color: rgba(76,175,80,0.3);">
+        <div class="kpi-label">Chỉ số cảnh báo sớm</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8;margin-top:8px">
+          Nợ xấu > 5% &bull; DAU/MAU < 15% &bull; Churn > 20%<br>
+          Tăng trưởng QoQ < 5% (2 quý liên tiếp)<br>
+          GDP VN < 5% &bull; Thất nghiệp > 3%
+        </div>
+      </div>
+      <div class="kpi" style="border-color: rgba(72,196,231,0.3);">
+        <div class="kpi-label">Kế hoạch dự phòng</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8;margin-top:8px">
+          <strong style="color:var(--red)">0-30 ngày:</strong> Đóng băng cho vay rủi ro cao, tăng thu hồi nợ<br>
+          <strong style="color:var(--orange)">1-3 tháng:</strong> Đàm phán lại điều khoản, cắt marketing 30%<br>
+          <strong style="color:var(--green)">3-6 tháng:</strong> Tái cân bằng danh mục, đơn giản hóa sản phẩm
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 11: THE ASK -->
+<div class="slide" data-slide="11">
+  <div class="slide-tag">Đề xuất</div>
+  <div class="slide-title">Cần gì từ <span class="accent">Ban Lãnh Đạo</span></div>
+  <div class="content">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="ask-item">
+        <div class="ask-icon">&#x1F9E0;</div>
+        <div class="ask-content">
+          <h3>Đầu tư đội ngũ AI Credit Scoring</h3>
+          <p>Xây dựng đội ngũ chuyên trách AI/ML để khai thác 60+ domain dữ liệu. Mục tiêu: tăng tỷ lệ duyệt từ 69% lên 75%+ mà giữ mức nợ xấu. Bán Scoring-as-a-Service cho đối tác.</p>
+          <div class="ask-timeline">TIMELINE: Q1-Q2 2026</div>
+        </div>
+      </div>
+      <div class="ask-item">
+        <div class="ask-icon">&#x1F91D;</div>
+        <div class="ask-content">
+          <h3>Phát triển đối tác — Thêm 2-3 nhà cho vay</h3>
+          <p>Mở rộng hệ sinh thái cho vay. Giảm tập trung VietCredit từ 66% xuống 45%. Ưu tiên đối tác ngân hàng (sau thành công MBV với 80.2% tỷ lệ duyệt). Thực tế VietCredit đang lỗ nặng — đây là cơ hội để đàm phán điều khoản có lợi hơn.</p>
+          <div class="ask-timeline">TIMELINE: H1 2026</div>
+        </div>
+      </div>
+      <div class="ask-item">
+        <div class="ask-icon">&#x1F680;</div>
+        <div class="ask-content">
+          <h3>Mở rộng sản phẩm: Vay có TSĐB + BNPL</h3>
+          <p>Vay có tài sản đảm bảo để nâng ticket lên 50-100 triệu+. BNPL tích hợp merchant để nắm bắt thị trường $8.5 tỷ. Định giá theo 3 phân khúc rủi ro khách hàng.</p>
+          <div class="ask-timeline">TIMELINE: H2 2026 — H1 2027</div>
+        </div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:16px">
+      <strong>Kết luận:</strong> Vay Nhanh đã chứng minh <em>product-market fit</em> với +296% YoY.
+      Bây giờ cần đầu tư để chuyển từ <strong>giai đoạn tăng trưởng</strong> sang <strong>giai đoạn mở rộng quy mô</strong> —
+      đa dạng hóa đối tác, mở rộng sản phẩm, và xây dựng lợi thế cạnh tranh bền vững bằng AI scoring.
+      Mục tiêu 2027: <em>45 nghìn tỷ VND giải ngân</em> với 8 đối tác và max 40% tập trung.
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- NAVIGATION -->
+<div class="nav-bar" id="navBar"></div>
+<div class="nav-counter" id="navCounter">01 / 12</div>
+<div class="nav-arrows">
+  <button onclick="prev()" id="btnPrev">&#8592;</button>
+  <button onclick="next()" id="btnNext">&#8594;</button>
+</div>
+<div class="kb-hint">Phím mũi tên hoặc vuốt để chuyển slide</div>
+
+<script>
+// === SLIDE ENGINE ===
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+let current = 0;
+
+function goTo(n) {
+  if (n < 0 || n >= totalSlides) return;
+  slides[current].classList.remove('active');
+  current = n;
+  slides[current].classList.add('active');
+  updateNav();
+  if (chartInitMap[current]) { chartInitMap[current](); chartInitMap[current] = null; }
+}
+function next() { goTo(current + 1); }
+function prev() { goTo(current - 1); }
+
+function updateNav() {
+  const dots = document.querySelectorAll('.nav-dot');
+  dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  document.getElementById('navCounter').textContent =
+    String(current + 1).padStart(2, '0') + ' / ' + String(totalSlides).padStart(2, '0');
+}
+
+const navBar = document.getElementById('navBar');
+for (let i = 0; i < totalSlides; i++) {
+  const dot = document.createElement('button');
+  dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+  dot.onclick = () => goTo(i);
+  navBar.appendChild(dot);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+  if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+  if (e.key === 'End') { e.preventDefault(); goTo(totalSlides - 1); }
+});
+
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 60) { dx < 0 ? next() : prev(); }
+});
+
+// === CHARTS ===
+Chart.defaults.color = '#8a879e';
+Chart.defaults.borderColor = 'rgba(174,32,112,0.1)';
+Chart.defaults.font.family = "'Be Vietnam Pro', sans-serif";
+Chart.defaults.font.size = 11;
+
+const chartInitMap = {};
+
+chartInitMap[2] = () => {
+  const ctx = document.getElementById('chartMonthly');
+  if (!ctx || ctx._chartInit) return; ctx._chartInit = true;
+  const months = ['T01','T02','T03','T04','T05','T06','T07','T08','T09','T10','T11','T12'];
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [
+        { label: '2024', data: [454,345,463,472,525,537,513,577,620,770,853,978], backgroundColor: 'rgba(174,32,112,0.25)', borderColor: 'rgba(174,32,112,0.6)', borderWidth: 1, borderRadius: 4 },
+        { label: '2025', data: [1163,966,1268,1335,1456,2173,2134,2238,2458,2949,2911,3129], backgroundColor: 'rgba(174,32,112,0.7)', borderColor: '#ae2070', borderWidth: 1, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y.toLocaleString() + ' tỷ VND' } } },
+      scales: { y: { beginAtZero: true, grid: { color: 'rgba(174,32,112,0.06)' }, ticks: { callback: v => v.toLocaleString() + ' tỷ' } }, x: { grid: { display: false } } }
+    }
+  });
+};
+
+chartInitMap[3] = () => {
+  const ctx24 = document.getElementById('chartLender2024'), ctx25 = document.getElementById('chartLender2025');
+  if (!ctx24 || ctx24._chartInit) return; ctx24._chartInit = true; ctx25._chartInit = true;
+  const opts = { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12, font: { size: 11 } } } } };
+  new Chart(ctx24, { type: 'doughnut', data: { labels: ['AMBER','MCREDIT','VIET_CREDIT'], datasets: [{ data: [69,22,9], backgroundColor: ['#ae2070','#48c4e7','#d4478a'], borderColor: '#12121e', borderWidth: 3 }] }, options: opts });
+  new Chart(ctx25, { type: 'doughnut', data: { labels: ['VIET_CREDIT','MCREDIT','AMBER','MBV'], datasets: [{ data: [63,20,14,3], backgroundColor: ['#ae2070','#48c4e7','#d4478a','#4caf50'], borderColor: '#12121e', borderWidth: 3 }] }, options: opts });
+};
+
+chartInitMap[4] = () => {
+  const ctx = document.getElementById('chartNPL');
+  if (!ctx || ctx._chartInit) return; ctx._chartInit = true;
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['MOB3','MOB4','MOB5','MOB6','MOB7','MOB8'],
+      datasets: [
+        { label: 'Vintage T7/2025', data: [0.8, 2.1, 3.2, 4.1, 5.0, 5.96], borderColor: '#ae2070', backgroundColor: 'rgba(174,32,112,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#ae2070' },
+        { label: 'Vintage T10/2025', data: [0.3, 0.7, 1.46, null, null, null], borderColor: '#4caf50', backgroundColor: 'rgba(76,175,80,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#4caf50', spanGaps: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y + '%' } } },
+      scales: { y: { beginAtZero: true, grid: { color: 'rgba(174,32,112,0.06)' }, ticks: { callback: v => v + '%' }, title: { display: true, text: 'Tỷ lệ nợ xấu (DPD90)', color: '#8a879e' } }, x: { grid: { display: false } } }
+    }
+  });
+};
+
+chartInitMap[5] = () => {
+  const ctx = document.getElementById('chartPenetration');
+  if (!ctx || ctx._chartInit) return; ctx._chartInit = true;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Ví MoMo', 'User FS hoạt động', 'Người vay VN/tháng', 'Nhóm bán chéo', 'Paylater dormant'],
+      datasets: [{ label: 'Nghìn user', data: [30000, 1440, 148, 1590, 995], backgroundColor: ['rgba(174,32,112,0.7)', 'rgba(174,32,112,0.5)', 'rgba(174,32,112,0.9)', 'rgba(72,196,231,0.6)', 'rgba(255,152,0,0.5)'], borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const v = c.parsed.x; return v >= 1000 ? (v/1000).toFixed(1) + ' triệu' : v + ' nghìn'; } } } },
+      scales: { x: { type: 'logarithmic', grid: { color: 'rgba(174,32,112,0.06)' }, ticks: { callback: v => v >= 1000 ? (v/1000) + 'M' : v + 'K' } }, y: { grid: { display: false } } }
+    }
+  });
+};
+
+chartInitMap[6] = () => {
+  const ctx = document.getElementById('chartCompetitor');
+  if (!ctx || ctx._chartInit) return; ctx._chartInit = true;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['FE Credit', 'MoMo VN', 'Home Credit', 'VietCredit'],
+      datasets: [{ label: 'Ước tính hàng tháng (tỷ VND)', data: [5500, 3100, 2250, 1750], backgroundColor: ['rgba(138,135,158,0.4)', 'rgba(174,32,112,0.85)', 'rgba(138,135,158,0.4)', 'rgba(72,196,231,0.5)'], borderRadius: 8, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y.toLocaleString() + ' tỷ VND/tháng' } } },
+      scales: { y: { beginAtZero: true, grid: { color: 'rgba(174,32,112,0.06)' }, ticks: { callback: v => v.toLocaleString() + ' tỷ' } }, x: { grid: { display: false } } }
+    }
+  });
+};
+
+chartInitMap[9] = () => {
+  const ctx = document.getElementById('chartProjection');
+  if (!ctx || ctx._chartInit) return; ctx._chartInit = true;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['2024 (Thực tế)', '2025 (Thực tế)', '2026 (Mục tiêu)', '2027 (Mục tiêu)'],
+      datasets: [
+        { label: 'Giải ngân (T VND)', data: [6.1, 24.2, 35, 45], backgroundColor: ['rgba(174,32,112,0.4)', 'rgba(174,32,112,0.75)', 'rgba(212,71,138,0.5)', 'rgba(72,196,231,0.5)'], borderColor: ['rgba(174,32,112,0.6)', '#ae2070', '#d4478a', '#48c4e7'], borderWidth: 2, borderRadius: 8, borderSkipped: false },
+        { label: 'Xu hướng', data: [6.1, 24.2, 35, 45], type: 'line', borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2, borderDash: [6, 4], pointRadius: 5, pointBackgroundColor: ['#ae2070','#ae2070','#d4478a','#48c4e7'], pointBorderColor: '#12121e', pointBorderWidth: 2, fill: false, tension: 0.3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y + ' nghìn tỷ VND' } } },
+      scales: { y: { beginAtZero: true, grid: { color: 'rgba(174,32,112,0.06)' }, ticks: { callback: v => v + 'T' }, max: 50 }, x: { grid: { display: false } } }
+    }
+  });
+};
+
+goTo(0);
+</script>
+</body>
+</html>

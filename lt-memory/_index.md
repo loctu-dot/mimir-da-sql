@@ -28,6 +28,7 @@
 | `knowledge/momo-revenue.md` | Cross-domain | P&L structure, ARPU ranking |
 | `knowledge/expense-management.md` | Growth Platform | Standard queries, Jan 2026 baselines |
 | `knowledge/notification.md` | MDS Notification | BU domain works, Platform times out, CTR formulas |
+| `knowledge/apollo-path-exploration.md` | Apollo Path Exploration | session_array vs validate_platform tables, sampling validation, Z-test overpowered at large n |
 
 ## Domain Master List
 - **Full catalog:** `domains/_all.md` — 65 domains (verified 2026-03-03)

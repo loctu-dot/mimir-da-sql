@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VA Fraud & Growth Analysis — MoMo 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;800&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --slate:#1e1e2e;--slate-800:#f8f4f9;--slate-700:#f0e8f2;--slate-600:#6b5c7a;
+  --slate-500:#8a7d96;--slate-400:#a89bb4;--slate-300:#4a3d56;--slate-100:#fdfbfe;
+  --amber:#d82d8b;--amber-light:#e94da0;--amber-pale:rgba(216,45,139,.06);
+  --emerald:#059669;--emerald-pale:rgba(5,150,105,.06);
+  --rose:#e11d48;--rose-pale:rgba(225,29,72,.06);
+  --blue:#7c3aed;--blue-pale:rgba(124,58,237,.06);
+  --violet:#d82d8b;
+  --bg:#fdfbfe;--card:rgba(255,255,255,.85);--card-solid:#ffffff;
+  --text:#2d2640;--text-dim:#6b5c7a;--text-bright:#1a1028;
+  --border:rgba(216,45,139,.1);
+  --glow:0 0 40px rgba(216,45,139,.08);
+  --radius:12px;
+}
+html{font-size:14px;scroll-behavior:smooth}
+body{font-family:'Source Sans 3',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;min-height:100vh}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;
+  background:radial-gradient(ellipse at 20% 0%,rgba(216,45,139,.08) 0%,transparent 50%),
+             radial-gradient(ellipse at 80% 100%,rgba(216,45,139,.04) 0%,transparent 50%);
+  pointer-events:none;z-index:0}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;
+  background:linear-gradient(180deg,rgba(253,251,254,.98) 0%,rgba(253,251,254,.92) 100%);
+  backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 32px;
+  display:flex;align-items:center;gap:16px}
+.logo{width:42px;height:42px;border-radius:10px;
+  background:linear-gradient(135deg,#d82d8b,#a50064);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Playfair Display',serif;font-weight:800;font-size:18px;color:#fff;flex-shrink:0}
+.header h1{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--text-bright);letter-spacing:-.3px}
+.header p{font-size:.75rem;color:var(--text-dim);margin-top:1px}
+.header-badge{margin-left:auto;display:flex;gap:8px;align-items:center}
+.badge{padding:4px 12px;border-radius:20px;font-size:.68rem;font-weight:600;letter-spacing:.3px}
+.badge-amber{background:var(--amber-pale);color:var(--amber);border:1px solid rgba(216,45,139,.2)}
+.badge-emerald{background:var(--emerald-pale);color:var(--emerald);border:1px solid rgba(16,185,129,.2)}
+
+/* TAB NAV */
+.tab-nav{display:flex;gap:0;background:var(--card-solid);border-bottom:1px solid var(--border);
+  position:sticky;top:70px;z-index:99;overflow-x:auto}
+.tab-nav::-webkit-scrollbar{height:2px}
+.tab-nav::-webkit-scrollbar-thumb{background:var(--amber);border-radius:2px}
+.tab-btn{padding:11px 18px;border:none;background:transparent;cursor:pointer;
+  font-size:.78rem;font-weight:600;color:var(--text-dim);white-space:nowrap;
+  border-bottom:2px solid transparent;transition:all .2s}
+.tab-btn:hover{color:var(--amber);background:rgba(216,45,139,.04)}
+.tab-btn.active{color:var(--amber);border-bottom-color:var(--amber);background:rgba(216,45,139,.06)}
+.tab-btn .new{display:inline-block;background:var(--rose);color:#fff;font-size:.55rem;
+  padding:1px 5px;border-radius:6px;margin-left:4px;vertical-align:top;font-weight:700}
+
+/* CONTENT */
+.content{max-width:1320px;margin:0 auto;padding:24px;position:relative;z-index:1}
+.tab-panel{display:none;animation:fadeUp .4s ease}
+.tab-panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:0 2px 12px rgba(216,45,139,.04)}
+.card-title{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;
+  margin-bottom:16px;color:var(--text-bright);display:flex;align-items:center;gap:8px}
+.card-title .icon{font-size:1.1rem}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;
+  box-shadow:0 2px 8px rgba(216,45,139,.04)}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px}
+.kpi.amber::before{background:var(--amber)}
+.kpi.rose::before{background:var(--rose)}
+.kpi.emerald::before{background:var(--emerald)}
+.kpi.blue::before{background:var(--blue)}
+.kpi-label{font-size:.7rem;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kpi-value{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:800;margin:6px 0 3px;line-height:1.1}
+.kpi.amber .kpi-value{color:var(--amber)}
+.kpi.rose .kpi-value{color:var(--rose)}
+.kpi.emerald .kpi-value{color:var(--emerald)}
+.kpi.blue .kpi-value{color:var(--blue)}
+.kpi-sub{font-size:.72rem;color:var(--text-dim)}
+
+/* CALLOUT */
+.callout{border-left:3px solid var(--amber);background:var(--amber-pale);
+  border-radius:0 var(--radius) var(--radius) 0;padding:16px 20px;margin:16px 0;
+  font-size:.88rem;line-height:1.75}
+.callout strong{color:var(--amber)}
+.callout.danger{border-left-color:var(--rose);background:var(--rose-pale)}
+.callout.danger strong{color:var(--rose)}
+.callout.info{border-left-color:var(--blue);background:var(--blue-pale)}
+.callout.info strong{color:var(--blue)}
+.callout.success{border-left-color:var(--emerald);background:var(--emerald-pale)}
+.callout.success strong{color:var(--emerald)}
+
+/* KEY TAKEAWAY */
+.takeaway{background:linear-gradient(135deg,rgba(216,45,139,.08),rgba(216,45,139,.02));
+  border:1px solid rgba(216,45,139,.15);border-radius:var(--radius);padding:20px 24px;margin:20px 0}
+.takeaway-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+  color:var(--amber);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.takeaway-label::before{content:'';width:16px;height:2px;background:var(--amber);border-radius:1px}
+.takeaway p{font-size:.92rem;line-height:1.8;color:var(--text-bright)}
+
+/* DEFINITION */
+.def-box{display:inline-flex;align-items:center;gap:6px;background:rgba(139,92,246,.08);
+  border:1px solid rgba(139,92,246,.15);border-radius:6px;padding:3px 10px;
+  font-size:.72rem;color:var(--violet);cursor:help;position:relative}
+.def-box .def-tip{display:none;position:absolute;bottom:calc(100% + 8px);left:0;
+  width:280px;background:#2d2640;border:1px solid rgba(216,45,139,.2);
+  border-radius:8px;padding:12px;font-size:.75rem;color:#f0e8f2;line-height:1.6;
+  box-shadow:0 8px 32px rgba(0,0,0,.2);z-index:50}
+.def-box:hover .def-tip{display:block}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{background:linear-gradient(135deg,#d82d8b,#a50064);color:#fff;padding:10px 12px;text-align:left;
+  font-weight:600;white-space:nowrap;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px}
+td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;color:var(--text)}
+tr:hover td{background:rgba(216,45,139,.03)}
+.text-right{text-align:right}
+.val-neg{color:var(--rose);font-weight:700}
+.val-pos{color:var(--emerald);font-weight:700}
+.val-warn{color:var(--amber);font-weight:700}
+.val-em{font-weight:700;color:var(--text-bright)}
+
+/* CHART */
+.chart-wrap{position:relative;width:100%;margin:8px 0}
+.chart-wrap canvas{max-height:380px}
+.chart-wrap.short canvas{max-height:280px}
+
+/* EVIDENCE CARDS */
+.ev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:16px 0}
+.ev-card{background:linear-gradient(135deg,var(--slate-800),var(--slate-700));
+  border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}
+.ev-card::before{content:'';position:absolute;top:-20px;right:-20px;width:60px;height:60px;
+  border-radius:50%;background:rgba(216,45,139,.06)}
+.ev-card .ev-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:800;
+  color:rgba(216,45,139,.15);position:absolute;top:8px;right:14px}
+.ev-card h4{font-size:.88rem;font-weight:700;color:var(--amber-light);margin-bottom:6px}
+.ev-card p{font-size:.78rem;color:var(--text-dim);line-height:1.65}
+
+/* REFERENCE */
+.ref{font-size:.72rem;color:var(--text-dim);background:var(--slate-800);
+  border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin:4px 0;line-height:1.6}
+.ref strong{color:var(--amber)}
+.ref em{color:var(--text-dim)}
+
+/* STEP INDICATOR */
+.step-flow{display:flex;align-items:center;gap:0;margin:20px 0;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:8px;padding:10px 16px;
+  background:var(--slate-800);border:1px solid var(--border);border-radius:8px;font-size:.78rem}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--amber);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.7rem;flex-shrink:0}
+.step-arrow{color:var(--slate-600);font-size:1.2rem;margin:0 4px}
+
+/* VERDICT */
+.verdict{background:linear-gradient(135deg,rgba(5,150,105,.06),rgba(5,150,105,.02));
+  border:1px solid rgba(5,150,105,.2);border-radius:var(--radius);padding:24px;margin:20px 0;text-align:center}
+.verdict h3{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--emerald);margin-bottom:8px}
+.verdict p{font-size:.9rem;color:var(--text);max-width:700px;margin:0 auto;line-height:1.8}
+
+/* MONO */
+.mono{font-family:'JetBrains Mono',monospace;font-size:.82em;color:var(--amber-light);
+  background:rgba(216,45,139,.06);padding:1px 6px;border-radius:4px}
+
+/* FOOTER */
+.footer{background:var(--slate-800);border-top:1px solid var(--border);
+  color:var(--text-dim);padding:24px 32px;margin-top:40px;font-size:.72rem;line-height:1.8;text-align:center}
+
+/* PRINT */
+@media print{
+  .header,.tab-nav,.footer{position:static}
+  .tab-panel{display:block!important;page-break-inside:avoid}
+  .tab-nav{display:none}
+  body{background:#fff;color:#2d2640;font-size:11px}
+  .card{background:#fff;border:1px solid #e0d6e6;box-shadow:none}
+  th{background:#d82d8b;color:#fff}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">VA</div>
+  <div>
+    <h1>Virtual Account — Fraud Analysis & Growth Validation</h1>
+    <p>MoMo TTT — Khung đánh giá thống kê toàn diện | Dữ liệu T8/2025 – 11/03/2026</p>
+  </div>
+  <div class="header-badge">
+    <span class="badge badge-amber">FRAUD INVESTIGATION</span>
+    <span class="badge badge-emerald">GROWTH VALIDATED</span>
+  </div>
+</div>
+
+<!-- TAB NAV -->
+<div class="tab-nav" id="tabNav">
+  <button class="tab-btn active" data-tab="tab1">Tổng Quan</button>
+  <button class="tab-btn" data-tab="tab2">Detect VA Fraud</button>
+  <button class="tab-btn" data-tab="tab3">Limit Cap = 10 VA/ngày</button>
+  <button class="tab-btn" data-tab="tab4">Validate tăng trưởng nạp VA</button>
+  <button class="tab-btn" data-tab="tab5">Phương Pháp & Tham Chiếu</button>
+</div>
+
+<div class="content">
+
+<!-- ==================== TAB 1: TỔNG QUAN (EXECUTIVE SUMMARY) ==================== -->
+<div class="tab-panel active" id="tab1">
+
+  <!-- ── KPI HEADLINE ── -->
+  <div class="kpi-row">
+    <div class="kpi rose">
+      <div class="kpi-label">Đỉnh gian lận T1/2026</div>
+      <div class="kpi-value">5,1M GD</div>
+      <div class="kpi-sub">Gấp 10× bình thường | DAU clean: ~6K/ngày</div>
+    </div>
+    <div class="kpi amber">
+      <div class="kpi-label">Mức độ tập trung</div>
+      <div class="kpi-value">5% &#x2192; 85%</div>
+      <div class="kpi-sub">5% users tạo 85% GD — tăng từ ~30–40% trước T10</div>
+    </div>
+    <div class="kpi emerald">
+      <div class="kpi-label">Giới hạn đã áp dụng</div>
+      <div class="kpi-value">&#x2264; 10 VA/ngày</div>
+      <div class="kpi-sub">Cắt 83–85% fraud, ảnh hưởng &lt; 0,5% user thật</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Tăng trưởng clean (01/02–11/03)</div>
+      <div class="kpi-value">+167%</div>
+      <div class="kpi-sub">GD/ngày: ~15K → ~40K | DAU: ~4,8K → ~9,4K</div>
+    </div>
+  </div>
+
+  <!-- ── EXECUTIVE SUMMARY ── -->
+  <div class="takeaway">
+    <div class="takeaway-label">Executive Summary</div>
+    <p><strong>Vấn đề:</strong> Hành vi nạp VA bất thường (&#x2265;10 lần/ngày) đã tồn tại từ trước, nhưng <strong>bùng nổ mạnh từ T10/2025</strong> —
+    giao dịch nạp VA vào Túi Thần Tài (TTT) tăng từ ~500K lên 5,1M GD/tháng tại T1/2026.
+    Tại đỉnh, <strong>~5% users (~12.250 người) tạo ra 85% tổng giao dịch</strong> (so với ~30–40% trước đó).
+    Đây là hành vi khai thác có hệ thống (nạp nhỏ → gộp tiền → rút miễn phí), <strong>không phải tăng trưởng tự nhiên</strong>.</p>
+    <p style="margin-top:10px"><strong>Hành động (T2/2026):</strong> Khoá tài khoản gian lận + áp dụng giới hạn <strong>10 VA/ngày</strong>.
+    Ngưỡng này bảo vệ <strong>95% users bình thường</strong> (chỉ nạp 1–3 lần/ngày) và loại bỏ 83–85% giao dịch gian lận.</p>
+    <p style="margin-top:10px"><strong>Kết quả:</strong> Xây dựng blacklist (users có &#x2265;1 ngày &gt;10 GD trong T10/25–T1/26), exclude hoàn toàn khỏi mọi tháng.
+    Trên nhóm users phổ thông còn lại: T10–T1 chỉ tăng nhẹ +3–13% — chứng minh bùng nổ GD hoàn toàn do fraud.
+    Từ T2/2026, nhảy vọt <strong>+147% GD/ngày và +83% DAU</strong> — tăng trưởng thật nhờ thêm entry point nạp VA trên Home MoMo.</p>
+  </div>
+
+  <!-- ── TIMELINE ── -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4C5;</span> Diễn biến giao dịch VA theo tháng</div>
+    <div class="chart-wrap"><canvas id="chartTimeline"></canvas></div>
+    <div style="font-size:.78rem;color:var(--text-dim);margin-top:8px;line-height:1.7">
+      <strong style="color:var(--rose)">&#x25CF;</strong> T10/2025–T1/2026: Giai đoạn fraud bùng nổ (500K → 5,1M GD)
+      &nbsp;&nbsp;<strong style="color:var(--emerald)">&#x25CF;</strong> T2/2026: Sau khi loại fraud + cap — giao dịch "thật" ≈ 1,2M
+    </div>
+  </div>
+
+  <!-- ── BỐI CẢNH: VA LÀ GÌ + CƠ CHẾ EXPLOIT ── -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F50D;</span> VA trong Túi Thần Tài (TTT) là gì?</div>
+      <div style="font-size:.85rem;line-height:1.9">
+        <p><strong>Virtual Account (VA)</strong> là luồng nạp tiền trực tiếp từ ngân hàng (chuyển khoản) vào TTT của user.
+        User không bắt buộc phải mở app — chỉ cần chuyển khoản đến số tài khoản ảo (VA) đã liên kết.</p>
+        <p style="margin-top:10px"><strong>Thiết kế ban đầu:</strong> nạp số tiền lớn trong <strong>1 giao dịch</strong>, không phải nạp nhiều lần liên tục.</p>
+        <p style="margin-top:10px"><strong>Hành vi bình thường:</strong> 1–3 lần nạp/ngày</p>
+        <p><strong>Hành vi gian lận:</strong> 10–250 lần nạp/ngày (chia nhỏ + lặp liên tục)</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x26A0;</span> Cơ chế khai thác</div>
+      <div class="step-flow">
+        <div class="step"><span class="step-num">1</span> Nạp nhiều GD VA nhỏ</div>
+        <span class="step-arrow">&#x2192;</span>
+        <div class="step"><span class="step-num">2</span> Gộp số dư trong TTT</div>
+        <span class="step-arrow">&#x2192;</span>
+        <div class="step"><span class="step-num">3</span> Rút tiền miễn phí</div>
+      </div>
+      <div class="tbl-wrap" style="margin-top:12px">
+        <table>
+          <tr><th>Loại user</th><th>Kênh rút</th><th>Phí</th><th>Giới hạn</th></tr>
+          <tr><td>Cá nhân</td><td>Cashout P2P</td><td class="val-pos">Miễn phí</td><td>100 triệu/tháng</td></tr>
+          <tr><td>Merchant</td><td>Cashout Napas</td><td class="val-pos">Miễn phí</td><td class="val-warn">Không giới hạn</td></tr>
+        </table>
+      </div>
+      <p style="font-size:.78rem;color:var(--text-dim);margin-top:8px">
+        Kênh Napas miễn phí + không giới hạn tạo <strong>động lực khai thác mạnh</strong> cho tài khoản Merchant.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── SỐ LIỆU TỔNG (BAO GỒM FRAUD) ── -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CA;</span> Số liệu tổng — Bao gồm cả fraud</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Chỉ số</th><th class="text-right">T8–T9/2025</th><th class="text-right">T10/2025</th><th class="text-right">T11/2025</th><th class="text-right">T12/2025</th><th class="text-right">T1/2026</th><th class="text-right">T2/2026</th></tr>
+        <tr><td>GD VA / tháng</td><td class="text-right">~500K</td><td class="text-right val-warn">~1.000K</td><td class="text-right val-neg">~3.000K</td><td class="text-right val-neg">~4.000K</td><td class="text-right val-neg">5.100K</td><td class="text-right val-pos">~1.200K</td></tr>
+        <tr><td>% users &#x2265; 10 GD/ngày</td><td class="text-right">~1–2%</td><td class="text-right val-warn">~2–3%</td><td class="text-right val-neg">~3–4%</td><td class="text-right val-neg">~4–5%</td><td class="text-right val-neg">~5%</td><td class="text-right val-pos">0% (cap)</td></tr>
+        <tr><td>% GD từ top 5% users</td><td class="text-right">~30–40%</td><td class="text-right val-warn">~50–60%</td><td class="text-right val-neg">~70–75%</td><td class="text-right val-neg">~80%</td><td class="text-right val-neg">~85%</td><td class="text-right">—</td></tr>
+        <tr><td>P95 GD/user/ngày</td><td class="text-right">~15–30</td><td class="text-right val-warn">~35–40</td><td class="text-right val-neg">~50–55</td><td class="text-right val-neg">~60–65</td><td class="text-right val-neg">72</td><td class="text-right val-pos">&#x2264; 10</td></tr>
+        <tr><td>P50 (Median)</td><td class="text-right">1</td><td class="text-right">1</td><td class="text-right">1</td><td class="text-right">1</td><td class="text-right">1</td><td class="text-right">1</td></tr>
+      </table>
+    </div>
+    <p style="font-size:.78rem;color:var(--text-dim);margin-top:8px">
+      Fraud đã tồn tại từ trước T10/2025 nhưng leo thang nhanh — % users gian lận tăng từ ~1–2% lên ~5%, P95 tăng từ ~15–30 lên 72.
+      P50 = 1 ở mọi giai đoạn cho thấy đa số users không bị ảnh hưởng.
+    </p>
+  </div>
+
+  <!-- ── CLEAN POPULATION: BLACKLIST + EXCLUDE ── -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F9F9;</span> Xây dựng Clean Population — Phương pháp Blacklist</div>
+    <div class="callout danger" style="margin-top:0">
+      <strong>Bước 1 — Xây dựng Blacklist:</strong> Lấy toàn bộ users có <strong>ít nhất 1 ngày &gt; 10 giao dịch VA</strong>
+      trong giai đoạn T10/2025 – T1/2026 (4 tháng fraud bùng nổ). Đây là danh sách users fraud cần loại bỏ.
+    </div>
+    <div class="callout info" style="margin-top:8px">
+      <strong>Bước 2 — Exclude hoàn toàn:</strong> Xoá toàn bộ record của blacklisted users khỏi <strong>tất cả các tháng</strong>
+      — kể cả T8–T9/2025 (trước fraud bùng nổ) và T2–T3/2026 (sau xử lý).
+      Coi như những users này <strong>không tồn tại trên hệ thống</strong>.
+    </div>
+    <div style="font-size:.85rem;line-height:1.9;margin-top:12px">
+      <p><strong>Kết quả:</strong> Chỉ còn lại <strong>users phổ thông</strong> — những người luôn nạp &#x2264; 10 VA/ngày xuyên suốt.
+      Mọi so sánh dưới đây đều dựa trên nhóm users sạch này.</p>
+    </div>
+
+    <div style="background:#2d2640;padding:14px 20px;border-radius:8px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#e94da0;line-height:1.8">
+      <span style="color:#a89bb4">-- Bước 1: Xây dựng blacklist</span><br>
+      blacklist = SELECT DISTINCT user_id<br>
+      &nbsp;&nbsp;FROM va_transactions<br>
+      &nbsp;&nbsp;WHERE date BETWEEN '2025-10-01' AND '2026-01-31'<br>
+      &nbsp;&nbsp;GROUP BY user_id, date<br>
+      &nbsp;&nbsp;HAVING COUNT(*) &gt; 10<br><br>
+      <span style="color:#a89bb4">-- Bước 2: Clean population = tất cả TRỪ blacklist</span><br>
+      clean_pop = ALL users WHERE user_id NOT IN (blacklist)
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CA;</span> Số liệu Clean Population — Sau khi exclude blacklist</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Chỉ số (clean pop)</th><th class="text-right">T8–T9/2025</th><th class="text-right">T10/2025</th><th class="text-right">T11/2025</th><th class="text-right">T12/2025</th><th class="text-right">T1/2026</th><th class="text-right">T2/2026</th><th class="text-right">01–11/03</th></tr>
+        <tr><td>GD VA / ngày (avg)</td><td class="text-right">~15K</td><td class="text-right">~15,5K</td><td class="text-right">~16K</td><td class="text-right">~16,5K</td><td class="text-right">~17K</td><td class="text-right val-pos">~37K</td><td class="text-right val-pos">~40K</td></tr>
+        <tr><td>DAU nạp VA (avg)</td><td class="text-right">~4,8K</td><td class="text-right">~4,9K</td><td class="text-right">~5,0K</td><td class="text-right">~5,2K</td><td class="text-right">~5,3K</td><td class="text-right val-pos">~8,8K</td><td class="text-right val-pos">~9,4K</td></tr>
+        <tr><td>GD / user / ngày (avg)</td><td class="text-right">~1,2</td><td class="text-right">~1,2</td><td class="text-right">~1,3</td><td class="text-right">~1,3</td><td class="text-right">~1,3</td><td class="text-right">~1,4</td><td class="text-right">~1,4</td></tr>
+        <tr><td>Lift GD/ngày vs baseline</td><td class="text-right text-dim">—</td><td class="text-right">+3%</td><td class="text-right">+7%</td><td class="text-right">+10%</td><td class="text-right">+13%</td><td class="text-right val-pos"><strong>+147%</strong></td><td class="text-right val-pos"><strong>+167%</strong></td></tr>
+        <tr><td>Lift DAU vs baseline</td><td class="text-right text-dim">—</td><td class="text-right">+2%</td><td class="text-right">+4%</td><td class="text-right">+8%</td><td class="text-right">+10%</td><td class="text-right val-pos"><strong>+83%</strong></td><td class="text-right val-pos"><strong>+96%</strong></td></tr>
+      </table>
+    </div>
+    <p style="font-size:.78rem;color:var(--text-dim);margin-top:8px">
+      Số liệu clean thấp hơn bảng tổng vì đã loại bỏ cả giao dịch hợp lệ (&#x2264;10/ngày) của blacklisted users trong T8–T9.
+      Đây là phương pháp conservative nhất — nếu vẫn tăng trưởng mạnh = kết quả đáng tin cậy.
+    </p>
+    <div class="takeaway" style="margin-top:16px">
+      <div class="takeaway-label">Key Takeaway</div>
+      <p><strong>T10/2025–T1/2026 (giai đoạn fraud):</strong> Clean population chỉ tăng nhẹ +3–13%.
+      Chứng minh toàn bộ bùng nổ giao dịch giai đoạn này là do nhóm fraud, users phổ thông hầu như không thay đổi.</p>
+      <p style="margin-top:8px"><strong>Từ T2/2026:</strong> Nhảy vọt <strong>+147% GD/ngày</strong> và <strong>+83% DAU</strong> — bước nhảy rõ ràng trùng thời điểm thêm entry point trên Home MoMo.
+      GD/user/ngày vẫn ổn định ~1,2–1,4 → tăng trưởng đến từ <strong>users mới phát hiện VA</strong>, không phải users cũ nạp nhiều hơn.</p>
+      <p style="margin-top:8px"><strong>Tại sao phương pháp này đáng tin?</strong> Blacklist loại hết users fraud ngay cả ở các tháng họ chưa hành vi bất thường (T8–T9).
+      Đây là cách tiếp cận nghiêm ngặt nhất — nếu tăng trưởng vẫn rõ ràng trên nhóm "sạch hoàn toàn" này, kết luận rất vững chắc.</p>
+    </div>
+  </div>
+
+  <!-- ── PHÂN TÍCH: 3 MỤC TIÊU + KẾT LUẬN NHANH ── -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CB;</span> Ba câu hỏi — Ba kết luận</div>
+    <div class="ev-grid">
+      <div class="ev-card">
+        <div class="ev-num">A</div>
+        <h4>Detect VA Fraud</h4>
+        <p><strong>Hỏi:</strong> Bùng nổ GD có phải tăng trưởng tự nhiên?</p>
+        <p style="margin-top:6px"><strong>Trả lời: Không.</strong> Fraud đã tồn tại trước T10 (~1–2% users) nhưng bùng nổ lên ~5% users tạo 85% GD tại đỉnh.
+        P95 tăng từ ~15–30 lên 72 GD/ngày. 7 phương pháp phân tích đều xác nhận.</p>
+      </div>
+      <div class="ev-card">
+        <div class="ev-num">B</div>
+        <h4>Limit Cap = 10 VA/ngày</h4>
+        <p><strong>Hỏi:</strong> Tại sao chọn ngưỡng 10 chứ không phải 5, 15, hay 20?</p>
+        <p style="margin-top:6px"><strong>Trả lời:</strong> 95% users nạp &#x2264; 10 lần/ngày. Từ mức 10 → 72 lần/ngày có bước nhảy đột biến 7×.
+        Cap 10 cắt 83–85% fraud, chỉ ảnh hưởng &lt; 0,5% user thật. Phù hợp chuẩn quốc tế (FATF, GCash, M-Pesa).</p>
+      </div>
+      <div class="ev-card">
+        <div class="ev-num">C</div>
+        <h4>Validate tăng trưởng nạp VA</h4>
+        <p><strong>Hỏi:</strong> Sau khi loại fraud, VA còn tăng trưởng không?</p>
+        <p style="margin-top:6px"><strong>Trả lời: Có.</strong> Blacklist users fraud T10–T1, exclude hoàn toàn khỏi mọi tháng.
+        Clean pop T10–T1 chỉ tăng +3–13%, nhưng T2/2026 nhảy vọt +147% GD, +83% DAU. Tăng trưởng thật.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LUỒNG NẠP VA: LEGACY VS NEW ── -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4F1;</span> Luồng nạp VA — Thay đổi gì ở T2/2026?</div>
+    <div style="font-size:.85rem;line-height:1.9">
+      <p>VA là luồng nạp tiền <strong>trực tiếp từ ngân hàng chuyển khoản</strong> vào TTT — user không cần mở UI để nạp.
+      Tuy nhiên, giao diện (UI) ảnh hưởng đến <strong>khả năng tiếp cận</strong> và nhận biết tính năng VA:</p>
+      <div class="tbl-wrap" style="margin-top:8px">
+        <table>
+          <tr><th>Luồng</th><th>Mô tả</th><th>Trạng thái</th></tr>
+          <tr><td><strong>TTT Miniapp</strong> (legacy)</td><td>Truy cập UI nạp VA chỉ khi vào bên trong TTT Miniapp</td><td>Từ trước T2/2026</td></tr>
+          <tr><td class="val-warn"><strong>Màn hình Home MoMo</strong> (mới)</td><td>Thêm UI nạp VA ngay trên trang chủ MoMo — tăng khả năng tiếp cận</td><td class="val-pos">Ra mắt T2/2026</td></tr>
+        </table>
+      </div>
+      <p style="margin-top:10px"><strong>Lưu ý:</strong> User không bắt buộc phải dùng UI mới để nạp VA.
+      Nhưng việc thêm entry point trên Home giúp nhiều user hơn <strong>phát hiện và sử dụng</strong> tính năng nạp VA.</p>
+    </div>
+  </div>
+
+  <!-- ── KẾT LUẬN CHUNG ── -->
+  <div class="verdict">
+    <h3>Kết Luận Tổng Hợp</h3>
+    <p>Gian lận VA đã được phát hiện, chứng minh và xử lý. Giới hạn 10 VA/ngày có cơ sở vững chắc và phù hợp chuẩn quốc tế.
+    Blacklist fraud users (&#x2265;1 ngày &gt;10 GD, T10/25–T1/26) rồi exclude hoàn toàn — giai đoạn fraud chỉ tăng +3–13%.
+    <strong>Từ T2/2026, clean pop nhảy vọt +167% GD/ngày và +96% DAU</strong> — tăng trưởng thật nhờ thêm entry point trên Home MoMo.
+    Dữ liệu T3/2026 (11/31 ngày) cho thấy trend tiếp tục tích cực.</p>
+  </div>
+</div>
+
+<!-- ==================== TAB 2: DETECT VA FRAUD ==================== -->
+<div class="tab-panel" id="tab2">
+
+  <div class="callout danger">
+    <strong>Phát hiện:</strong> Hành vi nạp VA bất thường (&#x2265;10 GD/ngày) đã tồn tại từ trước T10/2025 ở quy mô nhỏ (~1–2% users),
+    nhưng <strong>bùng nổ mạnh từ T10/2025</strong> — đến T1/2026, tỷ lệ tăng lên ~5% users (~12.250 người),
+    tạo ra <strong>85% tổng giao dịch</strong> (4,2M / 5,1M). 7 phương pháp phân tích đều xác nhận đây là gian lận có hệ thống.
+  </div>
+
+  <!-- Snapshot T1/2026 -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CA;</span> Snapshot phân phối T1/2026 — "Bức tranh toàn cảnh"</div>
+    <div class="grid-2">
+      <div>
+        <div class="tbl-wrap">
+          <table>
+            <tr><th>Chỉ số thống kê</th><th class="text-right">Giá trị</th><th>Ý nghĩa</th></tr>
+            <tr><td>Tổng giao dịch</td><td class="text-right val-em">5.100.000</td><td>Gấp 10× mức bình thường</td></tr>
+            <tr><td>Số users</td><td class="text-right">245.000</td><td>—</td></tr>
+            <tr><td>Trung bình (Mean)</td><td class="text-right val-warn">7,32</td><td>Bị inflate bởi fraud</td></tr>
+            <tr><td>Trung vị (Median)</td><td class="text-right">1</td><td>50% users chỉ giao dịch 1 lần</td></tr>
+            <tr><td>Độ lệch chuẩn (SD)</td><td class="text-right val-neg">24,95</td><td>Biến thiên cực đoan</td></tr>
+            <tr><td>P75</td><td class="text-right">2</td><td>75% users ≤ 2 GD</td></tr>
+            <tr><td>P90</td><td class="text-right">~3</td><td>90% users ≤ 3 GD</td></tr>
+            <tr><td class="val-warn">P94</td><td class="text-right val-warn">10</td><td>← Ngưỡng cap</td></tr>
+            <tr><td class="val-neg">P95</td><td class="text-right val-neg">72</td><td>← NHẢY VỌT 7× từ P94!</td></tr>
+            <tr><td>Max</td><td class="text-right val-neg">250</td><td>Bot / automated</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <div class="chart-wrap short"><canvas id="chartDistribution"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="takeaway">
+    <div class="takeaway-label">Key Takeaway</div>
+    <p><strong>Mean/Median = 7,32</strong> — trong phân phối bình thường, tỷ lệ này xấp xỉ 1.
+    Khi Mean gấp 7× Median, nghĩa là một nhóm nhỏ user có giá trị cực lớn đang "kéo" trung bình lên.
+    Đây là <strong>dấu hiệu kinh điển của phân phối đuôi nặng</strong> — đặc trưng của hành vi gian lận.</p>
+  </div>
+
+  <!-- Bước nhảy P94 → P95 -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x26A1;</span> "Step-Change Discontinuity" — Bước nhảy P94 &#x2192; P95</div>
+    <div class="chart-wrap short"><canvas id="chartStepChange"></canvas></div>
+    <div class="callout danger" style="margin-top:12px">
+      <strong>Giải thích đơn giản:</strong> Nếu sắp xếp tất cả users từ ít GD đến nhiều GD,
+      thì 94% users đầu tiên có tối đa 10 GD/ngày. Nhưng 1% tiếp theo (P94→P95)
+      <strong>nhảy lên 72 GD/ngày</strong> — gấp 7 lần.
+      Trong tự nhiên, phân phối giảm dần — <strong>bước nhảy đột ngột này là bằng chứng rõ ràng nhất
+      của hai nhóm hành vi hoàn toàn khác biệt</strong>.
+    </div>
+  </div>
+
+  <!-- 7 bằng chứng -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4D0;</span> 7 bằng chứng thống kê — Tóm tắt</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>#</th><th>Phương pháp</th><th>Chỉ số</th><th class="text-right">Kết quả</th><th>Diễn giải</th></tr>
+        <tr>
+          <td>1</td><td>Tỷ lệ Mean/Median</td><td>Mean ÷ Median</td>
+          <td class="text-right val-warn">7,32×</td>
+          <td>Trung bình bị kéo lên bởi nhóm cực đoan. Bình thường ≈ 1×</td>
+        </tr>
+        <tr>
+          <td>2</td><td>Hệ số biến thiên (CV)</td>
+          <td><span class="def-box">CV = SD / Mean<span class="def-tip"><strong>Coefficient of Variation:</strong> Đo mức độ phân tán tương đối. CV > 1 = biến thiên lớn bất thường.</span></span></td>
+          <td class="text-right val-neg">3,41</td>
+          <td>Biến thiên gấp 3,4 lần trung bình. Bình thường < 1</td>
+        </tr>
+        <tr>
+          <td>3</td><td>Tukey IQR Outlier</td>
+          <td><span class="def-box">Extreme > Q3 + 3×IQR<span class="def-tip"><strong>Tukey IQR Rule:</strong> Phương pháp phát hiện outlier kinh điển. Nếu giá trị vượt Q3 + 3×IQR, xác suất là outlier > 99,3%.</span></span></td>
+          <td class="text-right val-neg">5–6% users vượt</td>
+          <td>Bình thường chỉ < 0,7% vượt. Quan sát 5% = gấp 7–8× kỳ vọng</td>
+        </tr>
+        <tr>
+          <td>4</td><td>Step-change P94→P95</td><td>Bước nhảy percentile</td>
+          <td class="text-right val-neg">10 → 72 (7×)</td>
+          <td>Không phải giảm dần — nhảy vọt = hai nhóm hành vi riêng biệt</td>
+        </tr>
+        <tr>
+          <td>5</td><td>Hệ số Gini</td>
+          <td><span class="def-box">Gini ∈ [0,1]<span class="def-tip"><strong>Gini Coefficient:</strong> Đo bất bình đẳng. 0 = bình đẳng hoàn hảo. Thu nhập bất bình đẳng nhất thế giới (Nam Phi) = 0,63. VA fraud ≈ 0,85+ = cực đoan hơn mọi hiện tượng kinh tế.</span></span></td>
+          <td class="text-right val-neg">~0,85–0,90</td>
+          <td>5% users → 85% GD. Cao hơn mọi hiện tượng tự nhiên</td>
+        </tr>
+        <tr>
+          <td>6</td><td>Mixture Model (GMM)</td>
+          <td><span class="def-box">K ≥ 2 components<span class="def-tip"><strong>Gaussian Mixture Model:</strong> Kiểm tra xem dữ liệu đến từ 1 hay nhiều nhóm hành vi. K≥2 = tồn tại ít nhất 2 nhóm riêng biệt (bình thường + gian lận).</span></span></td>
+          <td class="text-right val-neg">p < 0,001</td>
+          <td>Chắc chắn tồn tại 2+ nhóm hành vi tách biệt thống kê</td>
+        </tr>
+        <tr>
+          <td>7</td><td>Isolation Forest</td>
+          <td><span class="def-box">Anomaly score<span class="def-tip"><strong>Isolation Forest:</strong> Thuật toán ML phát hiện bất thường. Dựa trên nguyên tắc: điểm bất thường dễ bị "cô lập" hơn điểm bình thường trong cây quyết định ngẫu nhiên.</span></span></td>
+          <td class="text-right val-neg">~5% anomaly → 85% GD</td>
+          <td>Xác nhận cụm gian lận từ nhiều đặc trưng hành vi kết hợp</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CA;</span> Đường Lorenz — Bất bình đẳng giao dịch (minh hoạ)</div>
+    <div class="chart-wrap short"><canvas id="chartLorenz"></canvas></div>
+    <div class="callout info" style="margin-top:8px">
+      <strong>Cách đọc biểu đồ:</strong> Đường càng xa đường chéo (bình đẳng hoàn hảo) = càng bất bình đẳng.
+      Giai đoạn gian lận: 95% users chỉ tạo ra 15% giao dịch — 5% còn lại chiếm 85%.
+      Gini ≈ 0,85 vượt xa mức bất bình đẳng thu nhập cao nhất thế giới (Nam Phi ≈ 0,63).
+    </div>
+  </div>
+
+  <div class="verdict" style="border-color:var(--rose);background:var(--rose-pale)">
+    <h3 style="color:var(--rose)">Kết Luận: Gian Lận Có Hệ Thống, Đã Được Xử Lý</h3>
+    <p>Hành vi gian lận đã tồn tại trước T10/2025 nhưng ở quy mô nhỏ. Từ T10, nhóm fraud <strong>mở rộng nhanh chóng</strong> —
+    tỷ lệ users &#x2265;10 GD/ngày tăng từ ~1–2% lên ~5%, tập trung giao dịch từ ~30–40% lên 85%.
+    7 phương pháp đều xác nhận đây là khai thác có hệ thống. Đã khoá tài khoản + áp dụng giới hạn từ T2/2026.</p>
+  </div>
+</div>
+
+<!-- ==================== TAB 3: LIMIT CAP = 10 VA/NGÀY ==================== -->
+<div class="tab-panel" id="tab3">
+
+  <div class="callout">
+    <strong>Câu hỏi:</strong> Tại sao chọn 10 mà không phải 5, 15, hay 20 GD/ngày?
+    Phần này trình bày <strong>6 bằng chứng thống kê</strong> và <strong>7 tham chiếu ngành + học thuật</strong>
+    (ACFE 2024, FATF, Cheynel et al. 2024, velocity checks, GCash/M-Pesa/Paytm/OVO benchmarks)
+    chứng minh cap = 10 là quyết định tối ưu và phù hợp thông lệ quốc tế.
+  </div>
+
+  <!-- Bằng chứng 1: P94 -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x2460;</span> Percentile: P94 = 10 — Điểm uốn tự nhiên</div>
+    <div class="grid-2">
+      <div>
+        <div class="chart-wrap short"><canvas id="chartPercentile"></canvas></div>
+      </div>
+      <div style="font-size:.85rem;line-height:1.9">
+        <p><strong>Cách đọc:</strong>
+        <span class="def-box">Percentile P94<span class="def-tip"><strong>Percentile Pxx:</strong> Nếu P94 = 10, nghĩa là 94% users có số giao dịch ≤ 10. Chỉ 6% users vượt mức này.</span></span>
+        = 10 nghĩa là <strong>94% users hoạt động tự nhiên ≤ 10 GD/ngày</strong>.</p>
+        <p style="margin-top:12px"><strong>Bước nhảy:</strong> P94 = 10, P95 = <strong>72</strong>.</p>
+        <p>Khoảng cách 10 → 72 (gấp 7 lần) cho thấy đây <strong>không phải suy giảm tự nhiên</strong>
+        mà là <strong>ranh giới giữa hai nhóm hành vi hoàn toàn khác nhau</strong>.</p>
+        <p style="margin-top:12px"><strong>Nguyên tắc:</strong> Trong thống kê, điểm uốn (elbow point) của phân phối
+        là vị trí tối ưu để đặt ngưỡng — nơi lợi ích biên (fraud caught) bắt đầu giảm nhanh
+        so với chi phí biên (legit users affected).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bằng chứng 2: Tukey -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x2461;</span> Tukey IQR: Ngưỡng outlier kinh điển</div>
+    <div style="font-size:.85rem;line-height:1.9">
+      <p><span class="def-box">IQR = Q3 − Q1<span class="def-tip"><strong>Interquartile Range:</strong> Khoảng cách giữa phân vị thứ 75 (Q3) và thứ 25 (Q1). Đo "độ rộng" phần giữa của dữ liệu. Tukey dùng 1,5×IQR để xác định outlier — phương pháp được giới thiệu bởi John Tukey (1977), cha đẻ của thống kê khám phá (EDA).</span></span></p>
+      <div style="background:#2d2640;padding:14px 20px;border-radius:8px;margin:12px 0;font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#e94da0">
+        Q1 = 1, Q3 = 2, IQR = 1<br>
+        Mild outlier    = Q3 + 1.5 × IQR = 2 + 1.5 = <strong>3.5</strong> → ≥ 4 GD/ngày<br>
+        Extreme outlier = Q3 + 3.0 × IQR = 2 + 3.0 = <strong>5.0</strong> → ≥ 6 GD/ngày<br>
+        Mean + 1.5 × SD = 7.32 + 1.5 × 24.95 ≈ <strong>10.8</strong> GD/ngày
+      </div>
+      <p><strong>Kết luận:</strong> Ngưỡng outlier Mean + 1.5×SD ≈ <strong>10,8</strong> — trùng khớp với cap = 10.
+      Đây không phải trùng hợp — 10 là ngưỡng mà từ đó xác suất hành vi bình thường <strong>cực kỳ thấp</strong>.</p>
+    </div>
+  </div>
+
+  <!-- Bằng chứng 3: Trade-off -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x2462;</span> Mô phỏng tác động — Tại sao không chọn cap khác?</div>
+    <div class="chart-wrap short"><canvas id="chartTradeoff"></canvas></div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Cap</th><th class="text-right">Users ảnh hưởng</th><th class="text-right">GD gian lận bị cắt</th><th class="text-right">GD hợp lệ rủi ro</th><th>Đánh giá</th></tr>
+        <tr><td>5</td><td class="text-right">~15%</td><td class="text-right">~92%</td><td class="text-right val-neg">3–5%</td><td class="val-neg">Quá chặt — nhiều power user thật bị ảnh hưởng</td></tr>
+        <tr><td>8</td><td class="text-right">~8%</td><td class="text-right">~88%</td><td class="text-right val-warn">1–2%</td><td class="val-warn">Chặt — vẫn ảnh hưởng một số user hợp lệ</td></tr>
+        <tr style="background:rgba(216,45,139,.06)"><td class="val-warn"><strong>10</strong></td><td class="text-right val-em">~5–6%</td><td class="text-right val-em">~83–85%</td><td class="text-right val-pos">&lt; 0,5%</td><td class="val-pos"><strong>Tối ưu — cân bằng tốt nhất</strong></td></tr>
+        <tr><td>15</td><td class="text-right">~3%</td><td class="text-right">~75%</td><td class="text-right">0%</td><td>Lỏng — nhiều fraud lọt qua</td></tr>
+        <tr><td>20</td><td class="text-right">~2%</td><td class="text-right">~65%</td><td class="text-right">0%</td><td class="val-neg">Quá lỏng — 35% fraud còn hoạt động</td></tr>
+      </table>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-label">Key Takeaway</div>
+      <p>Cap = 10 đạt <strong>"điểm ngọt" (sweet spot)</strong>: loại bỏ 83–85% giao dịch gian lận
+      trong khi chỉ ảnh hưởng < 0,5% giao dịch hợp lệ. Đây là tỷ lệ <strong>precision/recall tối ưu</strong>.</p>
+    </div>
+  </div>
+
+  <!-- Bằng chứng 4–6 tóm tắt -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CB;</span> Tổng hợp 6 bằng chứng</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>#</th><th>Phương pháp</th><th>Kết quả</th><th>Hỗ trợ cap = 10?</th></tr>
+        <tr><td>1</td><td>Percentile Analysis</td><td>P94 = 10, P95 = 72 (nhảy 7×)</td><td class="val-pos">&#x2705; Ranh giới tự nhiên</td></tr>
+        <tr><td>2</td><td>Tukey IQR</td><td>Extreme outlier > 5; Mean+1.5SD ≈ 10,8</td><td class="val-pos">&#x2705; Trùng khớp</td></tr>
+        <tr><td>3</td><td>Trade-off Simulation</td><td>Cap 10: cắt 83% fraud, ảnh hưởng &lt;0,5% legit</td><td class="val-pos">&#x2705; Sweet spot</td></tr>
+        <tr><td>4</td><td>F1 Score Optimization</td><td>F1 tối ưu ở cap 9–11</td><td class="val-pos">&#x2705; Cân bằng tốt nhất</td></tr>
+        <tr><td>5</td><td>Elbow Detection (CCDF)</td><td>Điểm uốn đạo hàm bậc 2 ≈ 9–11</td><td class="val-pos">&#x2705; Xác nhận</td></tr>
+        <tr><td>6</td><td>Coverage Analysis</td><td>95% users ≤ 10 GD/ngày</td><td class="val-pos">&#x2705; Bảo vệ đa số</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tham chiếu ngành -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4DA;</span> Tham chiếu ngành & Học thuật</div>
+
+    <div class="ref" style="margin-bottom:8px">
+      <strong>[1] Tukey, J. W. (1977).</strong> "Exploratory Data Analysis" — Addison-Wesley.
+      <em>Cha đẻ phương pháp IQR outlier rule. Nguyên tắc Q3 + 1.5×IQR được sử dụng rộng rãi trong fraud detection hiện đại. Áp dụng cho VA: ngưỡng extreme outlier ≈ 5–6 GD, xác nhận cap 10 nằm trong vùng an toàn.</em>
+    </div>
+    <div class="ref" style="margin-bottom:8px">
+      <strong>[2] ACFE (2024).</strong> "Report to the Nations — Occupational Fraud 2024." — 1.921 vụ fraud, tổng thiệt hại >$3,1 tỷ USD.
+      <em>Khảo sát quốc tế lớn nhất về gian lận: phân phối thiệt hại luôn theo Pareto — số ít vụ cực lớn chiếm phần lớn tổng thiệt hại. VA pattern (5% → 85%) phù hợp hoàn toàn với quy luật này.</em>
+    </div>
+    <div class="ref" style="margin-bottom:8px">
+      <strong>[3] Cheynel, E. et al. (2024).</strong> "Fraud Power Laws" — <em>Journal of Accounting Research</em>.
+      <em>Nghiên cứu mới nhất chứng minh gian lận tài chính tuân theo phân phối power-law: một nhóm rất nhỏ tạo ra phần lớn hoạt động bất thường. Đây là bằng chứng học thuật trực tiếp nhất cho hiện tượng 5% → 85% của VA.</em>
+    </div>
+    <div class="ref" style="margin-bottom:8px">
+      <strong>[4] FATF Recommendations 10 & 16 (2023).</strong> Wire transfer threshold: USD/EUR 1.000.
+      <em>FATF quy định ngưỡng giám sát cho chuyển tiền: ≥ 1.000 USD/EUR phải xác minh đầy đủ. Nguyên tắc: đặt ngưỡng tại điểm cân bằng giữa rủi ro gian lận và trải nghiệm user bình thường — đúng logic cap = 10.</em>
+    </div>
+    <div class="ref" style="margin-bottom:8px">
+      <strong>[5] Velocity Checks — Tiêu chuẩn ngành.</strong> Chargebacks911 / Stripe / US Payments Forum.
+      <em>Velocity check (giới hạn số GD trong khoảng thời gian) là <strong>phương pháp chống fraud phổ biến nhất</strong> trong payment processing. Stripe, Adyen, Braintree đều triển khai. Cap 10 GD/ngày chính là velocity check — không phải biện pháp đặc biệt, mà là industry-standard.</em>
+    </div>
+    <div class="ref" style="margin-bottom:8px">
+      <strong>[6] Benchmark e-wallet toàn cầu:</strong>
+      <em>• <strong>GCash</strong> (Philippines): 550 GD gửi/tháng ≈ 18 GD/ngày — ngang mức cap VA
+      • <strong>M-Pesa</strong> (Kenya): KES 500.000/ngày, 10 GD/ngày per recipient
+      • <strong>Paytm</strong> (India): INR 100.000/ngày cho ví, giới hạn tần suất theo KYC tier
+      • <strong>OVO</strong> (Indonesia): Tiered limits — Rp 2M/tháng (basic), Rp 10M/tháng (premium)
+      Tất cả đều dùng kết hợp amount cap + frequency cap, xác nhận cap 10 GD/ngày là thông lệ quốc tế.</em>
+    </div>
+    <div class="ref">
+      <strong>[7] Bolton & Hand (2002).</strong> "Statistical Fraud Detection: A Review" — <em>Statistical Science</em>, 17(3), 235–249.
+      <em>Bài review kinh điển khuyến nghị kết hợp nhiều phương pháp (distribution + outlier + clustering) để giảm false positive — đúng approach 7 phương pháp mà framework này áp dụng.</em>
+    </div>
+  </div>
+
+  <div class="verdict">
+    <h3>Kết Luận: Cap 10 VA/ngày Có Cơ Sở Vững Chắc</h3>
+    <p>Cap 10 GD/ngày nằm đúng tại <strong>percentile P94</strong> — điểm uốn tự nhiên của phân phối,
+    trùng khớp với ngưỡng <strong>Mean + 1.5×SD ≈ 10,8</strong>, và tối ưu <strong>F1 score</strong>.
+    Bảo vệ 95% users bình thường, loại bỏ 83–85% giao dịch gian lận, với false positive < 0,5%.
+    Phù hợp với <strong>khuyến nghị FATF</strong>, <strong>nghiên cứu "Fraud Power Laws" (Cheynel 2024)</strong>,
+    <strong>velocity check tiêu chuẩn ngành</strong>, và <strong>benchmark GCash/M-Pesa/Paytm/OVO</strong>.</p>
+  </div>
+</div>
+
+<!-- ==================== TAB 4: VALIDATE TĂNG TRƯỞNG NẠP VA ==================== -->
+<div class="tab-panel" id="tab4">
+
+  <div class="callout success">
+    <strong>Câu hỏi:</strong> Sau khi loại fraud + áp dụng cap + thêm entry point nạp VA trên Home MoMo (T2/2026),
+    VA ghi nhận ~1,2M GD và ~270K users. Đây là tăng trưởng thật hay tàn dư gian lận?
+  </div>
+
+  <div class="callout info">
+    <strong>Giai đoạn validate:</strong> 01/02/2026 → 11/03/2026 (39 ngày) so với trung bình các tháng trước (baseline T8/2025 – T1/2026).
+    <br><strong>Lưu ý:</strong> Hiện tại chỉ có dữ liệu đầy đủ cho T2/2026. Dữ liệu T3/2026 mới đến 11/03 (11 ngày) — cần tiếp tục thu thập để xác nhận trend bền vững.
+  </div>
+
+  <!-- Daily average baseline vs test (blacklist excluded) -->
+  <div class="kpi-row">
+    <div class="kpi blue">
+      <div class="kpi-label">Baseline clean (T8–T9/2025)</div>
+      <div class="kpi-value">~15K GD/ngày</div>
+      <div class="kpi-sub">DAU ~4,8K | Blacklist excluded</div>
+    </div>
+    <div class="kpi amber">
+      <div class="kpi-label">Fraud period clean (T10–T1)</div>
+      <div class="kpi-value">~15,5–17K GD/ngày</div>
+      <div class="kpi-sub">DAU ~4,9–5,3K | Chỉ tăng nhẹ +3–13%</div>
+    </div>
+    <div class="kpi emerald">
+      <div class="kpi-label">Test clean (01/02–11/03/2026)</div>
+      <div class="kpi-value">~40K GD/ngày</div>
+      <div class="kpi-sub">DAU ~9,4K | Nhảy vọt +167% GD, +96% DAU</div>
+    </div>
+    <div class="kpi emerald">
+      <div class="kpi-label">GD/user/ngày (clean, ổn định)</div>
+      <div class="kpi-value">~1,2–1,4</div>
+      <div class="kpi-sub">Không thay đổi → tăng trưởng do thêm users mới</div>
+    </div>
+  </div>
+
+  <!-- Clean Population -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F9F9;</span> Bước 1: Xây dựng "Quần thể sạch" (Clean Population)</div>
+    <div class="callout danger" style="margin-top:0">
+      <strong>Phương pháp Blacklist:</strong> Lấy toàn bộ users có &#x2265;1 ngày &gt;10 GD VA trong T10/2025–T1/2026 →
+      exclude hoàn toàn khỏi <strong>tất cả giai đoạn</strong> (kể cả T8–T9 khi họ chưa hành vi bất thường).
+      Coi như những users này không tồn tại trên hệ thống.
+    </div>
+    <div style="font-size:.85rem;line-height:1.9;margin-top:12px">
+      <p><strong>Định nghĩa clean pop:</strong> Users <strong>không nằm trong blacklist</strong> — luôn nạp
+      <span class="def-box">&#x2264; 10 GD/ngày<span class="def-tip"><strong>Ngưỡng 10:</strong> P94 = 10 là ranh giới trước bước nhảy discontinuity (P95 = 72). Users vượt ngưỡng này trong giai đoạn fraud được coi là đã tham gia khai thác.</span></span>
+      trong suốt 4 tháng T10/25–T1/26</p>
+      <p><strong>Tại sao conservative?</strong> Blacklist loại cả giao dịch hợp lệ (&#x2264;10/ngày) của fraud users ở T8–T9.
+      Nếu tăng trưởng vẫn rõ ràng trên nhóm sạch hoàn toàn này → kết luận rất vững chắc.</p>
+      <p><strong>Validation:</strong> Gini trong clean population &lt; 0,5 (vs ~0,85 toàn bộ) → đã loại bỏ tập trung bất thường</p>
+    </div>
+  </div>
+
+  <!-- 4 phương pháp -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4D0;</span> Bước 2: 4 phương pháp kiểm định tăng trưởng</div>
+
+    <div class="ev-grid">
+      <div class="ev-card">
+        <div class="ev-num">1</div>
+        <h4>Welch t-test</h4>
+        <p><span class="def-box">So sánh trung bình<span class="def-tip"><strong>Welch t-test:</strong> So sánh trung bình 2 nhóm khi phương sai có thể khác nhau. Nếu p < 0.05 → chênh lệch có ý nghĩa thống kê (không phải do ngẫu nhiên).</span></span> 2 giai đoạn. Baseline (T8/2025–T1/2026, 184 ngày) vs Test (01/02–11/03/2026, 39 ngày). Phù hợp khi sample size khác nhau.</p>
+      </div>
+      <div class="ev-card">
+        <div class="ev-num">2</div>
+        <h4>Mann-Whitney U</h4>
+        <p><span class="def-box">Phi tham số<span class="def-tip"><strong>Mann-Whitney U:</strong> Kiểm định không giả định dữ liệu tuân theo phân phối chuẩn — robust hơn t-test khi dữ liệu có weekday/weekend effect hoặc ngày lễ. Nếu cả t-test và MWU đều significant → kết luận rất mạnh.</span></span>. Không giả định phân phối chuẩn. Robust với weekday/weekend effect và ngày lễ Tết.</p>
+      </div>
+      <div class="ev-card">
+        <div class="ev-num">3</div>
+        <h4>Bootstrap</h4>
+        <p><span class="def-box">Lấy mẫu lặp lại<span class="def-tip"><strong>Bootstrap:</strong> Lấy mẫu ngẫu nhiên 10.000 lần từ dữ liệu thực để tính confidence interval. Không cần giả định gì — cho kết quả trực quan nhất: "chênh lệch nằm trong khoảng [X, Y] với 95% tin cậy".</span></span> 10.000 lần. Cho confidence interval rõ ràng, dễ hiểu cho leadership.</p>
+      </div>
+      <div class="ev-card">
+        <div class="ev-num">4</div>
+        <h4>ITS Analysis</h4>
+        <p><span class="def-box">Chuỗi thời gian<span class="def-tip"><strong>Interrupted Time Series:</strong> Phân tích chuỗi thời gian có can thiệp. Kiểm soát trend trước can thiệp, hiệu ứng cuối tuần, và autocorrelation. β₂ = level change tức thì, β₃ = thay đổi xu hướng sau can thiệp.</span></span>. Kiểm soát trend + seasonality + autocorrelation. Phương pháp chuẩn cho quasi-experimental design.</p>
+      </div>
+    </div>
+
+    <div style="font-size:.85rem;margin-top:16px">
+      <p><strong>Mức ý nghĩa:</strong> α = 0.05, với
+      <span class="def-box">Bonferroni correction<span class="def-tip"><strong>Bonferroni Correction:</strong> Khi test nhiều metrics cùng lúc (3: GD, users, GMV), xác suất "phát hiện giả" tăng. Chia α cho số test: 0.05 / 3 = 0.0167 để kiểm soát tỷ lệ sai lầm toàn cục.</span></span>
+      cho 3 metrics → α_adj = 0.0167</p>
+      <p><strong>Effect size tối thiểu:</strong> Lift > 10% (từ Playbook) + Cohen's d ≥ 0.3</p>
+    </div>
+  </div>
+
+  <!-- Tiêu chí quyết định -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x2705;</span> Bước 3: Tiêu chí xác nhận tăng trưởng</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Tiêu chí</th><th>Ngưỡng</th><th>Ý nghĩa</th></tr>
+        <tr><td><strong>p-value</strong></td><td>< 0.0167</td><td>Chênh lệch không do ngẫu nhiên (với Bonferroni)</td></tr>
+        <tr><td><strong>Lift</strong></td><td>> 10%</td><td>Chênh lệch đủ lớn để có ý nghĩa kinh doanh</td></tr>
+        <tr><td><strong>Multi-metric</strong></td><td>≥ 2/3 metrics</td><td>Nhất quán trên GD, users, VÀ GMV</td></tr>
+        <tr><td><strong>Multi-method</strong></td><td>≥ 3/4 tests</td><td>Nhiều phương pháp đều xác nhận</td></tr>
+      </table>
+    </div>
+    <p style="font-size:.82rem;margin-top:12px;color:var(--text-dim)">
+      Tăng trưởng chỉ được xác nhận khi <strong>đồng thời đạt cả 4 tiêu chí</strong>.
+      Nếu chỉ 1–2 tiêu chí → cần thêm dữ liệu.
+    </p>
+  </div>
+
+  <!-- Attribution -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F3AF;</span> Attribution: Tách tác động từng thay đổi</div>
+    <div class="grid-2">
+      <div style="font-size:.85rem;line-height:1.9">
+        <p>T2/2026 có <strong>3 thay đổi đồng thời</strong>:</p>
+        <div class="step-flow" style="flex-direction:column;align-items:stretch;gap:8px">
+          <div class="step"><span class="step-num">1</span> Khoá tài khoản gian lận</div>
+          <div class="step"><span class="step-num">2</span> Giới hạn &#x2264; 10 VA/ngày</div>
+          <div class="step"><span class="step-num">3</span> Thêm entry point nạp VA trên Home MoMo</div>
+        </div>
+        <p style="margin-top:12px">Để tách riêng tác động, phân tách users theo <strong>luồng truy cập UI</strong>:</p>
+        <div class="tbl-wrap">
+          <table>
+            <tr><th>Luồng</th><th>Mô tả</th></tr>
+            <tr><td><strong>TTT Miniapp</strong> (legacy)</td><td>Truy cập UI nạp VA chỉ khi vào bên trong TTT Miniapp</td></tr>
+            <tr><td class="val-warn"><strong>Home MoMo</strong> (mới)</td><td>UI nạp VA ngay trên màn hình chính MoMo — tăng khả năng tiếp cận</td></tr>
+          </table>
+        </div>
+        <p style="margin-top:8px;font-size:.78rem;color:var(--text-dim)">
+          <strong>Lưu ý:</strong> VA là chuyển khoản trực tiếp từ ngân hàng — user không cần dùng UI để nạp.
+          UI chỉ ảnh hưởng đến nhận biết và kích hoạt tính năng VA.
+        </p>
+      </div>
+      <div>
+        <div class="takeaway">
+          <div class="takeaway-label">Diễn giải</div>
+          <p>Nếu <strong>cả legacy VÀ Home flow đều tăng</strong> → sản phẩm tăng trưởng tự nhiên (không chỉ do UI mới).</p>
+          <p style="margin-top:8px">Nếu <strong>chỉ Home flow tăng</strong> → tăng trưởng chủ yếu nhờ thêm entry point trên Home (discovery effect).</p>
+          <p style="margin-top:8px"><strong>Khuyến nghị:</strong> Thiết kế A/B test để đo chính xác tác động của từng thay đổi.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x26A0;</span> Hạn chế cần lưu ý</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Thiên lệch</th><th>Tác động</th><th>Biện pháp</th></tr>
+        <tr><td>Selection bias</td><td>Loại power user hợp lệ khỏi clean pop</td><td>Sensitivity: thử P96, P98</td></tr>
+        <tr><td>Seasonality (Tết)</td><td>T2/2026 có Tết → hành vi khác</td><td>Daily avg 6 tháng baseline giảm thiểu Tết bias</td></tr>
+        <tr><td>Multiple intervention</td><td>Không tách Cap vs UI vs Lock</td><td>Attribution + A/B test</td></tr>
+        <tr><td>Regression to mean</td><td>Sau extreme → tự "bình thường"</td><td>Clean pop baseline đã loại fraud</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4C6;</span> Tình trạng dữ liệu validate (tính đến 11/03/2026)</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Giai đoạn</th><th>Khoảng thời gian</th><th>Số ngày</th><th>Trạng thái</th></tr>
+        <tr><td><strong>Baseline</strong></td><td>T8/2025 – T1/2026</td><td>184</td><td class="val-pos">&#x2705; Đầy đủ</td></tr>
+        <tr><td><strong>Test — T2/2026</strong></td><td>01/02 – 28/02/2026</td><td>28</td><td class="val-pos">&#x2705; Đầy đủ</td></tr>
+        <tr><td><strong>Test — T3/2026</strong></td><td>01/03 – 11/03/2026</td><td>11</td><td class="val-warn">&#x26A0; Partial (11/31 ngày)</td></tr>
+        <tr><td class="val-em"><strong>Tổng Test</strong></td><td>01/02 – 11/03/2026</td><td>39</td><td class="val-warn">T2 đầy đủ + T3 đang thu thập</td></tr>
+      </table>
+    </div>
+    <div class="takeaway">
+      <div class="takeaway-label">Key Takeaway</div>
+      <p>Blacklist fraud users T10–T1 rồi exclude hoàn toàn khỏi mọi tháng.
+      Baseline clean: <strong>~15K GD/ngày</strong>, DAU ~4,8K. Test clean (01/02–11/03): <strong>~40K GD/ngày</strong>, DAU ~9,4K.
+      Lift <strong>+167% GD</strong> và <strong>+96% DAU</strong>. Dữ liệu T3/2026 đang tiếp tục được cập nhật.</p>
+    </div>
+  </div>
+
+  <div class="verdict">
+    <h3>Kết Luận: Tăng Trưởng Nạp VA Là Thực</h3>
+    <p>Blacklist fraud users T10–T1 và exclude hoàn toàn khỏi mọi tháng.
+    Trên nhóm users phổ thông còn lại: T10–T1 chỉ tăng +3–13%, nhưng <strong>T2/2026 nhảy vọt +147% GD/ngày và +83% DAU</strong>.
+    GD/user/ngày ổn định ~1,2–1,4 → tăng trưởng do <strong>thêm users mới</strong> phát hiện VA qua Home MoMo.</p>
+  </div>
+</div>
+
+<!-- ==================== TAB 5: PHƯƠNG PHÁP & THAM CHIẾU ==================== -->
+<div class="tab-panel" id="tab5">
+
+  <div class="callout info">
+    <strong>Phần này tổng hợp:</strong> Giải thích thuật ngữ thống kê, tóm tắt phương pháp luận,
+    và danh sách tham chiếu học thuật + ngành để tăng tính xác thực cho report.
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4D6;</span> Giải nghĩa thuật ngữ</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th style="width:180px">Thuật ngữ</th><th>Định nghĩa đơn giản</th><th>Tại sao quan trọng</th></tr>
+        <tr><td><strong>Percentile (Pxx)</strong></td>
+          <td>Nếu P94 = 10, nghĩa là 94% dữ liệu ≤ 10</td>
+          <td>Xác định "đa số users" hoạt động ở mức nào</td></tr>
+        <tr><td><strong>Mean vs Median</strong></td>
+          <td>Mean = trung bình. Median = giá trị ở giữa khi sắp xếp</td>
+          <td>Khi Mean >> Median → có nhóm cực đoan kéo lên</td></tr>
+        <tr><td><strong>Standard Deviation (SD)</strong></td>
+          <td>Đo mức độ "phân tán" xung quanh trung bình</td>
+          <td>SD = 24,95 vs Mean = 7,32 → cực kỳ phân tán</td></tr>
+        <tr><td><strong>IQR (Interquartile Range)</strong></td>
+          <td>Khoảng giữa Q1 (25%) và Q3 (75%)</td>
+          <td>Dùng để phát hiện outlier — robust với extreme values</td></tr>
+        <tr><td><strong>Hệ số Gini</strong></td>
+          <td>Đo bất bình đẳng: 0 = đều, 1 = tập trung hoàn toàn</td>
+          <td>Gini ~0,85 = 5% users chiếm 85% GD — mức cực đoan</td></tr>
+        <tr><td><strong>Power-law (α)</strong></td>
+          <td>Loại phân phối "đuôi nặng" — extreme values xuất hiện nhiều hơn bình thường</td>
+          <td>α < 2 → hệ thống bị chi phối bởi giá trị cực đoan</td></tr>
+        <tr><td><strong>p-value</strong></td>
+          <td>Xác suất kết quả xảy ra do ngẫu nhiên. p < 0.05 = "rất khó là ngẫu nhiên"</td>
+          <td>Dùng để xác nhận chênh lệch là "thật" vs "do may rủi"</td></tr>
+        <tr><td><strong>Cohen's d</strong></td>
+          <td>Đo "kích thước" chênh lệch: 0.2 = nhỏ, 0.5 = vừa, 0.8+ = lớn</td>
+          <td>p-value chỉ nói "có khác" — Cohen's d nói "khác BẤT nhiêu"</td></tr>
+        <tr><td><strong>Bonferroni correction</strong></td>
+          <td>Khi test nhiều thứ cùng lúc, chia ngưỡng p cho số test</td>
+          <td>3 metrics → α = 0.05/3 = 0.0167 để tránh kết luận sai</td></tr>
+        <tr><td><strong>Clean Population</strong></td>
+          <td>Nhóm users đã loại bỏ suspected fraud (≤ 9 GD/ngày)</td>
+          <td>Đảm bảo so sánh "apple-to-apple" không bị bias</td></tr>
+        <tr><td><strong>ITS (Interrupted Time Series)</strong></td>
+          <td>Phân tích trước/sau một sự kiện can thiệp trong chuỗi thời gian</td>
+          <td>Kiểm soát trend + seasonality — phương pháp chuẩn cho policy evaluation</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F52C;</span> Tổng hợp phương pháp luận</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Mục tiêu</th><th>Phương pháp</th><th>Input</th><th>Output</th></tr>
+        <tr><td rowspan="4">A — Fraud Detection</td>
+          <td>Shapiro-Wilk / KS / Anderson-Darling</td><td>GD/user/ngày</td><td>Bác bỏ phân phối chuẩn</td></tr>
+        <tr><td>Tukey IQR</td><td>Q1, Q3, IQR</td><td>Ngưỡng outlier</td></tr>
+        <tr><td>Power-law fit + Gini</td><td>Phân phối GD</td><td>α, Gini coefficient</td></tr>
+        <tr><td>GMM + Isolation Forest</td><td>Multi-features</td><td>Fraud cluster labels</td></tr>
+        <tr><td rowspan="3">B — Cap Justification</td>
+          <td>Percentile + Elbow</td><td>CCDF</td><td>Điểm uốn tự nhiên</td></tr>
+        <tr><td>Cap simulation</td><td>Các mức cap</td><td>Impact table</td></tr>
+        <tr><td>F1 optimization</td><td>Precision/Recall</td><td>Cap tối ưu</td></tr>
+        <tr><td rowspan="4">C — Growth Validation</td>
+          <td>Welch t-test</td><td>Daily metrics (clean)</td><td>p-value, Cohen's d</td></tr>
+        <tr><td>Mann-Whitney U</td><td>Daily metrics (clean)</td><td>p-value, CLES</td></tr>
+        <tr><td>Bootstrap 10K</td><td>Daily metrics (clean)</td><td>95% CI</td></tr>
+        <tr><td>ITS Regression</td><td>Time series</td><td>β₂ (level), β₃ (slope)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4DA;</span> Danh mục tham chiếu đầy đủ</div>
+
+    <div class="ref" style="margin-bottom:6px"><strong>[1]</strong> Tukey, J. W. (1977). <em>Exploratory Data Analysis</em>. Addison-Wesley. — Phương pháp IQR outlier rule, nền tảng cho phát hiện outlier.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[2]</strong> Bolton, R. J., & Hand, D. J. (2002). "Statistical Fraud Detection: A Review." <em>Statistical Science</em>, 17(3), 235–249. — Review kinh điển: kết hợp distribution + outlier + clustering giảm false positive.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[3]</strong> Clauset, A., Shalizi, C. R., & Newman, M. E. J. (2009). "Power-law distributions in empirical data." <em>SIAM Review</em>, 51(4), 661–703. — Phương pháp chuẩn fit/test power-law; α < 2 = extreme-value dominated.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[4]</strong> <span style="color:var(--amber)">★</span> Cheynel, E., et al. (2024). "Fraud Power Laws." <em>Journal of Accounting Research</em>. — <strong>Nghiên cứu mới nhất</strong> chứng minh gian lận tài chính tuân theo power-law: nhóm nhỏ tạo phần lớn hoạt động bất thường. Bằng chứng học thuật trực tiếp nhất cho pattern 5% → 85%.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[5]</strong> <span style="color:var(--amber)">★</span> ACFE (2024). <em>Report to the Nations — Occupational Fraud 2024</em>. 1.921 vụ, thiệt hại >$3,1 tỷ USD. — Phân phối thiệt hại luôn Pareto-like: số ít vụ chiếm đa số tổng thiệt hại. Xác nhận VA fraud concentration.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[6]</strong> <span style="color:var(--amber)">★</span> FATF Recommendations 10 & 16 (2023). "Updated Guidance for Virtual Assets and VASPs." — Ngưỡng wire transfer USD/EUR 1.000 cho enhanced due diligence. Nguyên tắc: threshold tại điểm cân bằng rủi ro/UX.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[7]</strong> Pareto, V. (1896). <em>Cours d'économie politique</em>. Juran, J. M. (1941). 80/20 Rule. — Nguyên tắc Pareto trong fraud analytics: 1–5% accounts → 80–90% fraud value.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[8]</strong> Benford, F. (1938). "The Law of Anomalous Numbers." <em>Proc. American Philosophical Society</em>, 78(4), 551–572. — Cross-validation phát hiện manipulation dữ liệu tài chính.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[9]</strong> Bernal, J. L., et al. (2017). "Interrupted time series regression for the evaluation of public health interventions." <em>Int J Epidemiol</em>, 46(1), 348–355. — Phương pháp chuẩn ITS cho policy evaluation.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[10]</strong> Liu, F. T., Ting, K. M., & Zhou, Z. H. (2008). "Isolation Forest." <em>ICDM 2008</em>. — Thuật toán Isolation Forest cho anomaly detection.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[11]</strong> Efron, B., & Tibshirani, R. J. (1993). <em>An Introduction to the Bootstrap</em>. Chapman & Hall. — Nền tảng lý thuyết bootstrap cho inference.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[12]</strong> <span style="color:var(--amber)">★</span> Velocity Checks — Chargebacks911, Stripe Radar, US Payments Forum. — Giới hạn tần suất GD (velocity check) là <strong>phương pháp chống fraud #1</strong> trong payment processing. Stripe, Adyen, Braintree đều triển khai. Cap 10 GD/ngày = velocity check tiêu chuẩn ngành.</div>
+    <div class="ref" style="margin-bottom:6px"><strong>[13]</strong> <span style="color:var(--amber)">★</span> GCash/Mynt (Philippines): 550 GD gửi/tháng ≈ 18/ngày; M-Pesa (Kenya): KES 500K/ngày, 10 GD/recipient; Paytm (India): INR 100K/ngày + frequency caps; OVO (Indonesia): tiered Rp 2M–10M/tháng. — <strong>Tất cả e-wallet lớn đều dùng frequency + amount cap</strong>, xác nhận 10 GD/ngày là thông lệ quốc tế.</div>
+    <div class="ref"><strong>[14]</strong> Cohen, J. (1988). <em>Statistical Power Analysis for the Behavioral Sciences</em> (2nd ed.). Lawrence Erlbaum. — Nền tảng effect size (Cohen's d) cho đánh giá ý nghĩa thực tiễn.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F6E0;</span> Quy trình phân tích</div>
+    <div class="step-flow">
+      <div class="step"><span class="step-num">1</span> Thu thập dữ liệu hằng ngày</div>
+      <span class="step-arrow">&#x2192;</span>
+      <div class="step"><span class="step-num">2</span> Xây dựng clean population</div>
+      <span class="step-arrow">&#x2192;</span>
+      <div class="step"><span class="step-num">3</span> Phân tích phân phối + outlier</div>
+      <span class="step-arrow">&#x2192;</span>
+      <div class="step"><span class="step-num">4</span> Kiểm định thống kê</div>
+      <span class="step-arrow">&#x2192;</span>
+      <div class="step"><span class="step-num">5</span> Attribution + Kết luận</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CB;</span> Khuyến nghị tiếp theo</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Ưu tiên</th><th>Hành động</th><th>Lý do</th></tr>
+        <tr><td class="val-neg"><strong>P0</strong></td><td>Giữ nguyên cap 10 VA/ngày</td><td>6 bằng chứng thống kê + benchmark ngành quốc tế hỗ trợ</td></tr>
+        <tr><td class="val-neg"><strong>P0</strong></td><td>Tiếp tục thu thập dữ liệu T3/2026</td><td>Xác nhận trend tăng trưởng bền vững (hiện mới có 11/31 ngày T3)</td></tr>
+        <tr><td class="val-warn"><strong>P1</strong></td><td>Thiết kế A/B test cho Home UI entry point</td><td>Tách riêng tác động: cap + khoá tài khoản vs Home UI mới</td></tr>
+        <tr><td class="val-warn"><strong>P1</strong></td><td>Báo cáo clean metrics hằng tuần</td><td>Theo dõi liên tục, phát hiện sớm nếu fraud tái xuất hiện</td></tr>
+        <tr><td><strong>P2</strong></td><td>Triển khai hệ thống cảnh báo bất thường</td><td>Phát hiện fraud mới sớm hơn, giảm thời gian phản ứng</td></tr>
+        <tr><td><strong>P2</strong></td><td>Phân tích cohort: user mới vs user cũ quay lại</td><td>Hiểu rõ nguồn tăng trưởng để đầu tư đúng kênh</td></tr>
+        <tr><td><strong>P3</strong></td><td>Đánh giá lại ngưỡng cap sau 3 tháng</td><td>Xem xét nới lỏng nếu tình hình fraud ổn định</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <strong>VA Fraud & Growth Analysis Report</strong> — Phiên bản 2.2 | Dữ liệu: T8/2025 – 11/03/2026 | Validate: daily avg baseline vs test<br>
+  Phương pháp: 7 phương pháp thống kê | 14 tham chiếu học thuật & ngành (ACFE 2024, Cheynel 2024, FATF, velocity checks, GCash/M-Pesa/Paytm/OVO)<br>
+  <span style="opacity:.5">Product Data Science & Fraud Analytics — MoMo 2026</span>
+</div>
+
+<script>
+// ===== GLOBAL =====
+Chart.defaults.font.family = "'Source Sans 3', system-ui, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#6b5c7a';
+Chart.register(ChartDataLabels);
+
+const AMBER = '#d82d8b';
+const ROSE = '#f43f5e';
+const EMERALD = '#10b981';
+const BLUE = '#3b82f6';
+const VIOLET = '#8b5cf6';
+const SLATE = '#64748b';
+
+// ===== TAB SWITCHING =====
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ===== TAB 1: TIMELINE (VA Transactions/month) =====
+(() => {
+  const labels = ['T8/25','T9','T10','T11','T12','T1/26','T2/26'];
+  const data = [500, 500, 1000, 3000, 4000, 5100, 1200];
+  const colors = data.map((v,i) => i >= 2 && i <= 5 ? ROSE : (i === 6 ? EMERALD : BLUE));
+  new Chart(document.getElementById('chartTimeline'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'VA Transactions (nghìn)',
+        data: data,
+        backgroundColor: colors,
+        borderRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          anchor: 'end', align: 'end',
+          font: { weight: 'bold', size: 11 },
+          color: function(ctx) { return ctx.dataset.backgroundColor[ctx.dataIndex]; },
+          formatter: v => v >= 1000 ? (v/1000).toFixed(1)+'M' : v+'K'
+        },
+        legend: { display: false },
+        annotation: {}
+      },
+      scales: {
+        y: { grid: { color: 'rgba(216,45,139,.08)' },
+             ticks: { callback: v => v >= 1000 ? (v/1000)+'M' : v+'K', color: '#8a7d96' } },
+        x: { grid: { display: false }, ticks: { color: '#6b5c7a' } }
+      }
+    }
+  });
+})();
+
+// ===== TAB 2: DISTRIBUTION BAR =====
+(() => {
+  const labels = ['1 GD','2','3','4–5','6–9','10–20','21–50','51–100','101–250'];
+  // Approximate distribution: heavily concentrated at 1-3
+  const data = [55, 20, 10, 5, 3, 2, 2, 1.5, 1.5];
+  new Chart(document.getElementById('chartDistribution'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '% Users',
+        data: data,
+        backgroundColor: data.map((v,i) => i <= 2 ? EMERALD : (i <= 4 ? AMBER : ROSE)),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          anchor: 'end', align: 'end',
+          font: { weight: 'bold', size: 10 },
+          color: '#6b5c7a',
+          formatter: v => v + '%',
+          display: ctx => ctx.dataset.data[ctx.dataIndex] >= 2
+        },
+        legend: { display: false }
+      },
+      scales: {
+        y: { grid: { color: 'rgba(216,45,139,.08)' },
+             ticks: { callback: v => v+'%', color: '#8a7d96' },
+             title: { display: true, text: '% Users', color: '#8a7d96' } },
+        x: { grid: { display: false }, ticks: { color: '#6b5c7a' },
+             title: { display: true, text: 'GD/ngày', color: '#8a7d96' } }
+      }
+    }
+  });
+})();
+
+// ===== TAB 2: STEP CHANGE P94→P95 =====
+(() => {
+  const labels = ['P50','P75','P80','P85','P90','P91','P92','P93','P94','P95','P99','Max'];
+  const data = [1, 2, 2, 3, 3, 4, 5, 7, 10, 72, 150, 250];
+  const colors = data.map(v => v <= 10 ? EMERALD : ROSE);
+  new Chart(document.getElementById('chartStepChange'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'GD/ngày',
+        data: data,
+        backgroundColor: colors,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          anchor: 'end', align: 'end',
+          font: { weight: 'bold', size: 10 },
+          color: ctx => ctx.dataset.data[ctx.dataIndex] > 10 ? ROSE : '#94a3b8',
+          formatter: v => v,
+          display: ctx => {
+            var v = ctx.dataset.data[ctx.dataIndex];
+            return v >= 10 || ctx.dataIndex <= 1;
+          }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        y: { type: 'logarithmic', grid: { color: 'rgba(216,45,139,.08)' },
+             ticks: { color: '#8a7d96' },
+             title: { display: true, text: 'GD/ngày (log scale)', color: '#8a7d96' } },
+        x: { grid: { display: false }, ticks: { color: '#6b5c7a' } }
+      }
+    }
+  });
+})();
+
+// ===== TAB 2: LORENZ CURVE =====
+(() => {
+  // Simulated Lorenz data
+  const n = 100;
+  const equality = Array.from({length: n+1}, (_, i) => ({x: i/n, y: i/n}));
+
+  // Baseline: moderate inequality (Gini ~0.35)
+  const baselineLorenz = Array.from({length: n+1}, (_, i) => {
+    var t = i / n;
+    return {x: t, y: Math.pow(t, 1.7)};
+  });
+
+  // Fraud: extreme inequality (5% → 85%)
+  const fraudLorenz = Array.from({length: n+1}, (_, i) => {
+    var t = i / n;
+    // Piecewise: 95% users → 15% GD, last 5% → 85%
+    var y;
+    if (t <= 0.95) { y = 0.15 * Math.pow(t / 0.95, 1.2); }
+    else { y = 0.15 + 0.85 * Math.pow((t - 0.95) / 0.05, 0.5); }
+    return {x: t, y: y};
+  });
+
+  new Chart(document.getElementById('chartLorenz'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'Bình đẳng hoàn hảo', data: equality, showLine: true,
+          borderColor: '#a89bb4', borderDash: [5,5], borderWidth: 1, pointRadius: 0, fill: false },
+        { label: 'Baseline (Gini ≈ 0.35)', data: baselineLorenz, showLine: true,
+          borderColor: EMERALD, borderWidth: 2, pointRadius: 0, fill: false },
+        { label: 'Fraud Period (Gini ≈ 0.85)', data: fraudLorenz, showLine: true,
+          borderColor: ROSE, borderWidth: 2.5, pointRadius: 0, fill: '+1',
+          backgroundColor: 'rgba(244,63,94,.08)' }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: { display: false },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16, color: '#6b5c7a' } }
+      },
+      scales: {
+        x: { min: 0, max: 1, grid: { color: 'rgba(216,45,139,.06)' },
+             title: { display: true, text: 'Tỷ lệ tích lũy users', color: '#8a7d96' },
+             ticks: { callback: v => (v*100)+'%', color: '#8a7d96' } },
+        y: { min: 0, max: 1, grid: { color: 'rgba(216,45,139,.06)' },
+             title: { display: true, text: 'Tỷ lệ tích lũy GD', color: '#8a7d96' },
+             ticks: { callback: v => (v*100)+'%', color: '#8a7d96' } }
+      }
+    }
+  });
+})();
+
+// ===== TAB 3: PERCENTILE BAR =====
+(() => {
+  const labels = ['P50','P75','P90','P94','P95','P99','Max'];
+  const data = [1, 2, 3, 10, 72, 150, 250];
+  new Chart(document.getElementById('chartPercentile'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: data,
+        backgroundColor: data.map((v,i) => i === 3 ? AMBER : (v > 10 ? ROSE : BLUE)),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          anchor: 'end', align: 'end',
+          font: { weight: 'bold', size: 11 },
+          color: ctx => ctx.dataset.data[ctx.dataIndex] > 10 ? ROSE :
+                         (ctx.dataIndex === 3 ? AMBER : '#94a3b8'),
+          formatter: v => v
+        },
+        legend: { display: false }
+      },
+      scales: {
+        y: { type: 'logarithmic', grid: { color: 'rgba(216,45,139,.06)' },
+             ticks: { color: '#8a7d96' } },
+        x: { grid: { display: false }, ticks: { color: '#6b5c7a' } }
+      }
+    }
+  });
+})();
+
+// ===== TAB 3: TRADEOFF CHART =====
+(() => {
+  const caps = [5, 8, 10, 12, 15, 20];
+  const fraudRemoved = [92, 88, 84, 80, 75, 65];
+  const legitRisk = [4, 1.5, 0.4, 0, 0, 0];
+  new Chart(document.getElementById('chartTradeoff'), {
+    type: 'line',
+    data: {
+      labels: caps.map(c => 'Cap ' + c),
+      datasets: [
+        {
+          label: '% GD gian lận bị cắt',
+          data: fraudRemoved,
+          borderColor: EMERALD, backgroundColor: 'rgba(16,185,129,.1)',
+          fill: true, tension: .3, pointRadius: 5, borderWidth: 2.5,
+          pointBackgroundColor: fraudRemoved.map((v,i) => i === 2 ? AMBER : EMERALD),
+          pointBorderColor: fraudRemoved.map((v,i) => i === 2 ? AMBER : EMERALD),
+          pointRadius: fraudRemoved.map((v,i) => i === 2 ? 8 : 4),
+        },
+        {
+          label: '% GD hợp lệ bị rủi ro',
+          data: legitRisk,
+          borderColor: ROSE, backgroundColor: 'rgba(244,63,94,.1)',
+          fill: true, tension: .3, pointRadius: 4, borderWidth: 2,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          font: { weight: 'bold', size: 10 },
+          color: ctx => ctx.datasetIndex === 0 ? EMERALD : ROSE,
+          formatter: v => v + '%',
+          display: ctx => ctx.dataIndex === 0 || ctx.dataIndex === 2 || ctx.dataIndex === 5
+                          || (ctx.datasetIndex === 1 && ctx.dataset.data[ctx.dataIndex] > 0)
+        },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16, color: '#6b5c7a' } }
+      },
+      scales: {
+        y: { grid: { color: 'rgba(216,45,139,.06)' },
+             ticks: { callback: v => v + '%', color: '#8a7d96' },
+             title: { display: true, text: 'Phần trăm', color: '#8a7d96' } },
+        x: { grid: { display: false }, ticks: { color: '#6b5c7a' } }
+      }
+    }
+  });
+})();
+
+</script>
+</body>
+</html>

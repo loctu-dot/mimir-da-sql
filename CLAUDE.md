@@ -99,16 +99,101 @@ Read these before writing SQL:
 - `lt-memory/errors/bigquery-access-map.md` — which BQ datasets are accessible vs blocked
 - Never fabricate column names. If unknown, mark `[UNKNOWN - verify]`.
 - Save research to `docs/research/YYYY-MM-DD-<slug>.md`. For 3+ dimensions, create SPA dashboard.
+- For validation reports: use MoMo SPA template (`shared-claude-config/skills/frontend-design/references/momo_spa_report_template.md`).
 
 ## BigQuery
 
+### gcloud SDK setup
+
 ```bash
+# Windows (MINGW64/Git Bash) — add to ~/.bashrc
+export CLOUDSDK_PYTHON="$LOCALAPPDATA/Programs/Python/Python313/python.exe"
+export PATH="$HOME/google-cloud-sdk/bin:$PATH"
+
+# Mac — add to ~/.zshrc
 export CLOUDSDK_PYTHON=/Library/Frameworks/Python.framework/Versions/3.11/bin/python3
 export PATH="$HOME/google-cloud-sdk/bin:$PATH"
-bq query --project_id=momovn-bu-fi-shared --use_legacy_sql=false --format=csv < query.sql
 ```
 
+### Authentication (new device setup)
+
+```bash
+gcloud auth login
+gcloud auth application-default login    # REQUIRED for Python SDK
+gcloud config set project momovn-bu-fi-shared
+```
+
+### bq CLI usage
+
+```bash
+# Dry-run first (free, instant)
+bq query --dry_run --project_id=momovn-bu-fi-shared --use_legacy_sql=false --format=csv < query.sql
+# Execute
+bq query --project_id=momovn-bu-fi-shared --use_legacy_sql=false --format=csv --max_rows=1000 < query.sql
+```
+
+### Python BigQuery SDK
+
+```bash
+# Install (use find_python.sh for portable path)
+pip install google-cloud-bigquery google-cloud-bigquery-storage db-dtypes pandas
+```
+
+```python
+import os, sys
+
+# CRITICAL: Fix Windows cp1252 encoding — MUST be at top of every script
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+    os.environ["PYTHONIOENCODING"] = "utf-8"
+
+from google.cloud import bigquery
+
+client = bigquery.Client(project="momovn-bu-fi-shared")
+df = client.query("SELECT 1").to_dataframe()
+```
+
+### Windows-specific gotchas
+
+| Issue | Fix |
+|-------|-----|
+| `UnicodeEncodeError: 'charmap' codec` | `sys.stdout.reconfigure(encoding="utf-8")` at top of script |
+| `python3: No such file or directory` | Use `run_hook.sh` wrapper or `find_python.sh` |
+| `quota exceeded` warning | Set `--project=momovn-bu-fi-shared` or `GOOGLE_CLOUD_PROJECT` env |
+| `BigQuery Storage module not found` | `pip install google-cloud-bigquery-storage` |
+| Vietnamese text crashes print() | cp1252 cannot encode Vietnamese — use UTF-8 reconfigure above |
+| `VPC Service Control: Request is prohibited by organization's policy` | **STOP immediately. Do NOT retry.** See below. |
+
+### VPC Service Control Error (CRITICAL — DO NOT RETRY)
+
+If any BigQuery operation returns `VPC Service Control: Request is prohibited by organization's policy`:
+
+**IMMEDIATELY stop all BigQuery-related tasks.** Do NOT retry, do NOT attempt workarounds.
+
+Tell the user:
+> BigQuery bi chan boi VPC Service Control. Ban can:
+> 1. Bat **OpenVPN** (MoMo su dung OpenVPN) de ket noi vao mang noi bo cong ty
+> 2. Hoac su dung mang WiFi tai van phong MoMo
+>
+> Day la chinh sach bao mat cua to chuc, khong the bypass duoc.
+> Sau khi ket noi VPN/mang noi bo, thu lai lenh BigQuery.
+
+This is a network-level restriction enforced by Google Cloud organization policy.
+No amount of retrying, re-authenticating, or changing projects will fix it.
+The ONLY solution is connecting via **OpenVPN** or MoMo office network.
+
+### Windows Python Path
+
+On Windows, `python3` does NOT exist in Git Bash PATH. Python hooks use `run_hook.sh` wrapper
+that auto-detects Python across platforms (Mac/Linux/Windows).
+
+- `run_hook.sh` searches: `python3` -> `python` -> `$LOCALAPPDATA/Programs/Python/*/python.exe`
+- Python .py files keep standard shebang `#!/usr/bin/env python3` (for Mac/Linux compatibility)
+- When running Python manually: `~/.claude/hooks/run_hook.sh script.py`
+
 **Job project:** `momovn-bu-fi-shared`. Data lives in `momovn-prod`.
+**PII columns** (`user_id`, `session_id`) have policy tags on some tables but are accessible via BU_FI dataset.
 
 ## Mimir Distill (Data Collection) — PAUSED
 

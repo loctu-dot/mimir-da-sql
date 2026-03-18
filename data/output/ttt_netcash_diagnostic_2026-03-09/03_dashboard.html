@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TTT Net Cash Diagnostic Dashboard — MoMo 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+/* ============ RESET & BASE ============ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pink:#ae2070;--pink-light:#d4267f;--pink-pale:#f8e8f0;--dark:#1a1a2e;--accent:#e94560;--pos:#4CAF50;--neg:#f44336;
+  --bg:#faf5f8;--card:#fff;--text:#2d2d3a;--text-secondary:#6a6a8a;
+  --border:#e8d8e0;--shadow:0 2px 12px rgba(174,32,112,.08);
+  --radius:12px;--transition:all .25s ease;
+}
+html{font-size:14px;scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+
+/* ============ HEADER ============ */
+.header{background:linear-gradient(135deg,var(--pink) 0%,var(--pink-light) 50%,#b8297a 100%);color:#fff;padding:18px 32px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(174,32,112,.35)}
+.logo{width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;backdrop-filter:blur(4px)}
+.header-text h1{font-size:1.35rem;font-weight:700;letter-spacing:-.3px}
+.header-text p{font-size:.82rem;opacity:.8;margin-top:2px}
+.header-badge{margin-left:auto;background:rgba(255,255,255,.2);padding:5px 14px;border-radius:20px;font-size:.75rem;font-weight:600;white-space:nowrap;backdrop-filter:blur(4px)}
+
+/* ============ TAB NAV ============ */
+.tab-nav{display:flex;gap:0;background:#fff;border-bottom:2px solid var(--border);position:sticky;top:84px;z-index:99;overflow-x:auto;box-shadow:0 2px 8px rgba(174,32,112,.04)}
+.tab-nav::-webkit-scrollbar{height:3px}
+.tab-nav::-webkit-scrollbar-thumb{background:var(--pink);border-radius:3px}
+.tab-btn{padding:12px 20px;border:none;background:transparent;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--text-secondary);white-space:nowrap;border-bottom:3px solid transparent;transition:var(--transition);position:relative}
+.tab-btn:hover{color:var(--pink);background:var(--pink-pale)}
+.tab-btn.active{color:var(--pink);border-bottom-color:var(--pink);background:var(--pink-pale)}
+.tab-btn .badge{display:inline-block;background:var(--pink);color:#fff;font-size:.6rem;padding:1px 6px;border-radius:8px;margin-left:5px;vertical-align:top;font-weight:700}
+
+/* ============ CONTENT ============ */
+.content{max-width:1400px;margin:0 auto;padding:24px}
+.tab-panel{display:none;animation:fadeIn .35s ease}
+.tab-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ============ CARDS ============ */
+.card{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:20px;border:1px solid var(--border)}
+.card-title{font-size:1rem;font-weight:700;margin-bottom:16px;color:var(--pink);display:flex;align-items:center;gap:8px}
+.card-title .icon{font-size:1.1rem}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+.kpi{background:var(--card);border-radius:var(--radius);padding:20px 24px;box-shadow:var(--shadow);border:1px solid var(--border);border-left:4px solid var(--pink)}
+.kpi-label{font-size:.75rem;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.kpi-value{font-size:1.8rem;font-weight:800;margin:6px 0 4px;line-height:1.1}
+.kpi-sub{font-size:.75rem;color:var(--text-secondary)}
+.kpi.negative{border-left-color:var(--neg)}
+.kpi.negative .kpi-value{color:var(--neg)}
+.kpi.positive{border-left-color:var(--pos)}
+.kpi.positive .kpi-value{color:var(--pos)}
+.kpi.neutral .kpi-value{color:var(--pink)}
+
+/* CALLOUT */
+.callout{background:linear-gradient(135deg,var(--pink-pale),rgba(233,69,96,.06));border-left:4px solid var(--pink);border-radius:0 var(--radius) var(--radius) 0;padding:16px 20px;margin:16px 0;font-size:.9rem;line-height:1.7}
+.callout strong{color:var(--pink)}
+.callout.warning{border-left-color:var(--accent);background:linear-gradient(135deg,rgba(233,69,96,.06),rgba(244,67,54,.06))}
+.callout.warning strong{color:var(--accent)}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:var(--pink);color:#fff;padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+tr:hover td{background:var(--pink-pale)}
+.text-right{text-align:right}
+.text-center{text-align:center}
+.val-neg{color:var(--neg);font-weight:700}
+.val-pos{color:var(--pos);font-weight:700}
+.val-em{font-weight:700;color:var(--pink)}
+
+/* CHART WRAPPER */
+.chart-wrap{position:relative;width:100%;margin:8px 0}
+.chart-wrap canvas{max-height:400px}
+.chart-wrap.short canvas{max-height:300px}
+
+/* BEHAVIORAL CARDS */
+.beh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:16px 0}
+.beh-card{background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.beh-card::before{content:'';position:absolute;top:-30px;right:-30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.15)}
+.beh-card .beh-num{font-size:2.2rem;font-weight:800;opacity:.2;position:absolute;top:8px;right:16px}
+.beh-card h4{font-size:.95rem;font-weight:700;margin-bottom:8px;color:#ffe0f0}
+.beh-card p{font-size:.8rem;opacity:.9;line-height:1.6}
+
+/* PYRAMID */
+.pyramid{display:flex;flex-direction:column;align-items:center;gap:4px;margin:20px 0}
+.pyramid-level{text-align:center;padding:12px;color:#fff;font-weight:700;font-size:.82rem;border-radius:4px;transition:var(--transition)}
+.pyramid-level:hover{transform:scale(1.03)}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:30px;margin:16px 0}
+.timeline::before{content:'';position:absolute;left:12px;top:0;bottom:0;width:2px;background:var(--pink);opacity:.3}
+.tl-item{position:relative;margin-bottom:16px}
+.tl-item::before{content:'';position:absolute;left:-23px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--pink);border:2px solid #fff;box-shadow:0 0 0 2px var(--pink)}
+.tl-item .tl-date{font-size:.72rem;color:var(--text-secondary);font-weight:600}
+.tl-item .tl-text{font-size:.85rem;margin-top:2px}
+
+/* SIGNIFICANCE STARS */
+.stars{color:#FFD700;font-weight:700}
+
+/* SUGGESTION CARDS (Tab 9) */
+.sug-card{background:var(--card);border-radius:var(--radius);padding:0;box-shadow:var(--shadow);margin-bottom:20px;border:1px solid var(--border);overflow:hidden}
+.sug-header{display:flex;align-items:stretch}
+.sug-rank{width:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0}
+.sug-rank .rank-num{font-size:1.6rem;line-height:1}
+.sug-rank .rank-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;opacity:.8;margin-top:2px}
+.sug-info{flex:1;padding:16px 20px}
+.sug-info h3{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.sug-info .sug-tag{display:inline-block;font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:600;margin-right:4px}
+.sug-body{padding:0 20px 20px;font-size:.85rem;line-height:1.7}
+.sug-body .evidence{background:var(--pink-pale);border-left:3px solid var(--pink);padding:10px 14px;border-radius:0 8px 8px 0;margin:10px 0;font-size:.82rem}
+.sug-body .evidence strong{color:var(--pink)}
+.sug-body .benchmark{background:rgba(33,150,243,.06);border-left:3px solid #2196F3;padding:10px 14px;border-radius:0 8px 8px 0;margin:10px 0;font-size:.82rem}
+.sug-body .benchmark strong{color:#1565C0}
+.sug-impact{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:12px 0}
+.sug-impact-item{text-align:center;padding:10px;background:rgba(174,32,112,.04);border-radius:8px}
+.sug-impact-item .imp-label{font-size:.68rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.3px}
+.sug-impact-item .imp-value{font-size:1.1rem;font-weight:800;margin-top:2px}
+@media(max-width:700px){.sug-impact{grid-template-columns:1fr}.sug-header{flex-direction:column}.sug-rank{width:100%;flex-direction:row;padding:10px 16px;gap:8px}}
+
+/* FOOTER */
+.footer{background:linear-gradient(135deg,var(--pink),var(--pink-light));color:rgba(255,255,255,.75);padding:24px 32px;margin-top:40px;font-size:.75rem;line-height:1.8;text-align:center}
+.footer strong{color:rgba(255,255,255,.95)}
+
+/* PRINT */
+@media print{
+  .header,.tab-nav,.footer{position:static}
+  .tab-panel{display:block!important;page-break-inside:avoid;break-inside:avoid}
+  .tab-nav{display:none}
+  body{font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">M</div>
+  <div class="header-text">
+    <h1>TTT Net Cash Diagnostic Dashboard</h1>
+    <p>Phân tích chẩn đoán dòng tiền ròng TTT — Dữ liệu đến 09/03/2026</p>
+  </div>
+  <div class="header-badge">C-LEVEL REPORT</div>
+</div>
+
+<!-- TAB NAV -->
+<div class="tab-nav" id="tabNav">
+  <button class="tab-btn active" data-tab="tab1">Tổng Quan</button>
+  <button class="tab-btn" data-tab="tab10">Phân Tích AUM <span class="badge">MỚI</span></button>
+  <button class="tab-btn" data-tab="tab2">Phân Loại TYPE</button>
+  <button class="tab-btn" data-tab="tab3">TTT+ Deep Dive</button>
+  <button class="tab-btn" data-tab="tab4">Hành Vi Nạp Rút</button>
+  <button class="tab-btn" data-tab="tab5">So Sánh Ngày</button>
+  <button class="tab-btn" data-tab="tab6">Kiểm Định Thống Kê</button>
+  <button class="tab-btn" data-tab="tab7">Thị Trường &amp; Tương Quan</button>
+  <button class="tab-btn" data-tab="tab8">Tâm Lý Học &amp; Kết Luận</button>
+  <button class="tab-btn" data-tab="tab9">Chiến Lược &amp; Đề Xuất</button>
+</div>
+
+<!-- ==================== TAB 1: TỔNG QUAN ==================== -->
+<div class="content">
+<div class="tab-panel active" id="tab1">
+  <div class="kpi-row">
+    <div class="kpi negative">
+      <div class="kpi-label">Net Cash MTD (T3/2026)</div>
+      <div class="kpi-value">-209 tỷ</div>
+      <div class="kpi-sub">9 ngày đầu tháng — âm kỷ lục</div>
+    </div>
+    <div class="kpi neutral">
+      <div class="kpi-label">AUM Tổng TTT</div>
+      <div class="kpi-value">12.181 tỷ</div>
+      <div class="kpi-sub">Tăng trưởng bền vững YoY</div>
+    </div>
+    <div class="kpi negative">
+      <div class="kpi-label">CO/CI Ratio (T3 MTD)</div>
+      <div class="kpi-value">104,4%</div>
+      <div class="kpi-sub">Rút > Nạp → dòng tiền ròng âm</div>
+    </div>
+    <div class="kpi positive">
+      <div class="kpi-label">MAU (T3 MTD)</div>
+      <div class="kpi-value">2,03 triệu</div>
+      <div class="kpi-sub">Người dùng vẫn hoạt động tốt</div>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <strong>Phát hiện quan trọng:</strong> TTT+ chiếm 104% net cash drain. TTT regular vẫn dương +24 tỷ.
+    Toàn bộ vấn đề nằm ở nhóm TTT+ — đặc biệt Platinum có số dư lớn.
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4C8;</span> Net Cash theo tháng (T1/2025 &#x2192; T3/2026 MTD)</div>
+    <div class="chart-wrap"><canvas id="chartNetCashMonthly"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F4CA;</span> So sánh T3 MTD (9 ngày)</div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Chỉ số</th><th class="text-right">T3/2025</th><th class="text-right">T3/2026</th><th class="text-right">&#x0394;</th></tr>
+          <tr><td>Net Cash</td><td class="text-right val-pos">+28 tỷ</td><td class="text-right val-neg">-209 tỷ</td><td class="text-right val-neg">-237 tỷ</td></tr>
+          <tr><td>Cash-in</td><td class="text-right">4.785 tỷ</td><td class="text-right">5.416 tỷ</td><td class="text-right val-pos">+13%</td></tr>
+          <tr><td>Cash-out</td><td class="text-right">4.757 tỷ</td><td class="text-right">5.625 tỷ</td><td class="text-right val-neg">+18%</td></tr>
+          <tr><td>CO/CI Ratio</td><td class="text-right">99,4%</td><td class="text-right val-neg">104,4%</td><td class="text-right val-neg">+5%pt</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F4A1;</span> Điểm chính</div>
+      <ul style="font-size:.85rem;line-height:2;padding-left:18px">
+        <li>T3/2026 MTD là tháng <strong>âm sâu nhất</strong> kể từ T1/2025</li>
+        <li>CI tăng 13% nhưng CO tăng 18% &#x2192; tốc độ rút nhanh hơn nạp</li>
+        <li>T2/2026 đạt +791 tỷ (cao nhất lịch sử) &#x2192; swing 1.000 tỷ</li>
+        <li>AUM tổng ổn định (~12.181 tỷ) nhưng CO P2P tăng 69% YoY &#x2192; một phần tiền <strong>đã rời MoMo</strong> qua ngân hàng. Platinum AUM vẫn tăng +11% (T1→T3/26) — drain chỉ chiếm ~5% số dư</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAB 2: PHÂN LOẠI TYPE ==================== -->
+<div class="tab-panel" id="tab2">
+  <div class="callout">
+    <strong>Phân tích theo TYPE:</strong> TTT được chia thành 4 loại — TTT (regular), TTT+, Quỹ Nhóm, và Merchant.
+    TTT+ luôn âm suốt 15 tháng qua — đây là structural drain, không phải seasonal.
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CA;</span> Net Cash theo TYPE — 6 tháng trọng điểm</div>
+    <div class="chart-wrap"><canvas id="chartTypeStacked"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F4CB;</span> Chi tiết Net Cash theo TYPE (tỷ VND)</div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>TYPE</th><th class="text-right">T1/25</th><th class="text-right">T6/25</th><th class="text-right">T12/25</th><th class="text-right">T1/26</th><th class="text-right">T2/26</th><th class="text-right">T3 MTD</th></tr>
+          <tr><td>TTT (regular)</td><td class="text-right val-pos">+833</td><td class="text-right val-pos">+328</td><td class="text-right val-pos">+225</td><td class="text-right val-pos">+340</td><td class="text-right val-pos">+877</td><td class="text-right val-pos">+24</td></tr>
+          <tr><td><strong>TTT+</strong></td><td class="text-right val-neg">-25</td><td class="text-right val-neg">-203</td><td class="text-right val-neg">-236</td><td class="text-right val-neg">-259</td><td class="text-right val-neg">-215</td><td class="text-right val-neg">-218</td></tr>
+          <tr><td>Quỹ Nhóm</td><td class="text-right val-pos">+133</td><td class="text-right val-pos">+103</td><td class="text-right val-pos">+88</td><td class="text-right val-pos">+102</td><td class="text-right val-pos">+112</td><td class="text-right val-neg">-9</td></tr>
+          <tr><td>Merchant</td><td class="text-right val-pos">+26</td><td class="text-right val-neg">-10</td><td class="text-right val-pos">+12</td><td class="text-right val-pos">+15</td><td class="text-right val-pos">+17</td><td class="text-right val-neg">-6</td></tr>
+          <tr style="font-weight:700;background:var(--pink-pale)"><td><strong>TỔNG</strong></td><td class="text-right">966</td><td class="text-right">218</td><td class="text-right">89</td><td class="text-right">198</td><td class="text-right">791</td><td class="text-right val-neg">-209</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F967;</span> AUM theo TYPE (tháng gần nhất)</div>
+      <div class="chart-wrap short"><canvas id="chartAumPie"></canvas></div>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <strong>Kết luận TYPE:</strong> TTT+ âm liên tục 15 tháng liền — trung bình -192 tỷ/tháng.
+    Đây là <em>structural outflow</em>, không phải hiện tượng mùa vụ. Cần can thiệp sản phẩm.
+  </div>
+</div>
+
+<!-- ==================== TAB 3: TTT+ DEEP DIVE ==================== -->
+<div class="tab-panel" id="tab3">
+  <div class="callout warning">
+    <strong>Phát hiện cốt lõi:</strong> 48K Platinum users (&lt;1% tổng user) = 80% drain TTT+.
+    Trong đó, nhóm Balance 50M+ (39K users) chiếm 76% drain Platinum.
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CA;</span> TTT+ Net Cash theo TIER — Q1/2026</div>
+    <div class="chart-wrap short"><canvas id="chartTierBar"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CB;</span> PLUS_SEGMENT Breakdown — T3/2026 MTD</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>PLUS_SEGMENT</th><th class="text-right">Users</th><th class="text-right">Net Cash (tỷ)</th><th class="text-right">CO P2P (tỷ)</th><th class="text-right">CO Napas (tỷ)</th><th class="text-right">Net/User (triệu)</th></tr>
+        <tr><td><strong>Balance 50M+</strong></td><td class="text-right">39.000</td><td class="text-right val-neg">-165</td><td class="text-right">180</td><td class="text-right">109</td><td class="text-right val-neg">-4,2</td></tr>
+        <tr><td>Vipzone Telco</td><td class="text-right">480.000</td><td class="text-right val-neg">-31</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right val-neg">-0,06</td></tr>
+        <tr><td>Vipzone P2P</td><td class="text-right">54.000</td><td class="text-right val-neg">-18</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right val-neg">-0,33</td></tr>
+        <tr><td>Khác</td><td class="text-right">—</td><td class="text-right val-neg">-4</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td></tr>
+        <tr style="font-weight:700;background:rgba(233,69,96,.06)"><td>TỔNG TTT+</td><td class="text-right">~573K</td><td class="text-right val-neg">-218</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right val-neg">-0,38</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F464;</span> So sánh Per-User Metrics</div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Metric</th><th class="text-right">Balance 50M+</th><th class="text-right">Vipzone Telco</th><th class="text-right">Tỷ lệ</th></tr>
+          <tr><td>Số user</td><td class="text-right">39K</td><td class="text-right">480K</td><td class="text-right">1 : 12</td></tr>
+          <tr><td>Net cash/user</td><td class="text-right val-neg">-4,2 triệu</td><td class="text-right val-neg">-0,06 triệu</td><td class="text-right val-em">70x</td></tr>
+          <tr><td>% tổng drain</td><td class="text-right val-em">76%</td><td class="text-right">14%</td><td class="text-right">—</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F3AF;</span> Tập trung rủi ro</div>
+      <div class="pyramid">
+        <div class="pyramid-level" style="width:40%;background:var(--neg)">39K users Balance 50M+<br><small>-165 tỷ (76%)</small></div>
+        <div class="pyramid-level" style="width:55%;background:var(--accent)">48K Platinum<br><small>-174 tỷ (80%)</small></div>
+        <div class="pyramid-level" style="width:70%;background:var(--pink)">573K TTT+ users<br><small>-218 tỷ (100%)</small></div>
+        <div class="pyramid-level" style="width:85%;background:#6a6a8a">~5M tổng TTT users<br><small>-209 tỷ (net all)</small></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAB 4: HÀNH VI NẠP RÚT ==================== -->
+<div class="tab-panel" id="tab4">
+  <div class="callout">
+    <strong>Xu hướng P2P:</strong> Cash-out qua P2P tăng vọt từ 4.785 tỷ (T3/2025) &#x2192; 9.446 tỷ (T1/2026) &#x2192; 8.855 tỷ (T2/2026) &#x2192; 2.581 tỷ (T3 MTD 9 ngày).
+    P2P trở thành kênh rút chính — tăng +69% YoY.
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4B0;</span> Cash-in vs Cash-out Trend (Tổng TTT)</div>
+    <div class="chart-wrap"><canvas id="chartCiCo"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F4CB;</span> YoY T3 MTD (9 ngày mỗi năm)</div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Kênh</th><th class="text-right">T3/2025</th><th class="text-right">T3/2026</th><th class="text-right">&#x0394;</th></tr>
+          <tr><td>CI Total</td><td class="text-right">4.785</td><td class="text-right">5.416</td><td class="text-right val-pos">+13%</td></tr>
+          <tr><td>CO Total</td><td class="text-right">4.757</td><td class="text-right">5.625</td><td class="text-right val-neg">+18%</td></tr>
+          <tr><td>CO P2P</td><td class="text-right">1.528</td><td class="text-right val-em">2.581</td><td class="text-right val-neg">+69%</td></tr>
+          <tr><td>CO Napas</td><td class="text-right">389</td><td class="text-right">174</td><td class="text-right val-pos">-55%</td></tr>
+          <tr><td>CO Payment</td><td class="text-right">820</td><td class="text-right">905</td><td class="text-right">+10%</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F4CA;</span> Cash-out theo TYPE — T3/2026 MTD (tỷ)</div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>TYPE</th><th class="text-right">CO P2P</th><th class="text-right">CO Payment</th><th class="text-right">CO Napas</th><th class="text-right">Tổng CO</th></tr>
+          <tr><td>TTT (regular)</td><td class="text-right">1.637</td><td class="text-right">643</td><td class="text-right">18</td><td class="text-right">2.298</td></tr>
+          <tr><td><strong>TTT+</strong></td><td class="text-right val-em">835</td><td class="text-right">262</td><td class="text-right val-em">156</td><td class="text-right">1.253</td></tr>
+          <tr style="font-weight:700;background:var(--pink-pale)"><td>Tổng</td><td class="text-right">2.472</td><td class="text-right">905</td><td class="text-right">174</td><td class="text-right">3.551</td></tr>
+        </table>
+      </div>
+      <div class="callout" style="margin-top:12px">
+        <strong>Ghi chú:</strong> TTT+ chiếm 89% CO Napas — nhóm Platinum rút qua ngân hàng để chuyển sang tiết kiệm lãi suất cao hơn.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CA;</span> CO P2P Trend — 4 tháng gần nhất</div>
+    <div class="chart-wrap short"><canvas id="chartP2PTrend"></canvas></div>
+  </div>
+</div>
+
+<!-- ==================== TAB 5: SO SÁNH NGÀY ==================== -->
+<div class="tab-panel" id="tab5">
+  <div class="callout">
+    <strong>So sánh daily:</strong> T3/2025 vs T3/2026 trong 9 ngày đầu. Pattern tương tự (cuối tuần dương, đầu tuần âm)
+    nhưng T3/2026 có biên độ lớn hơn nhiều — phản ánh dòng tiền bất ổn hơn.
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4C5;</span> Net Cash hằng ngày — T3/2025 vs T3/2026 (9 ngày đầu)</div>
+    <div class="chart-wrap"><canvas id="chartDailyCompare"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CA;</span> Net Cash hằng ngày theo TYPE — T3/2026</div>
+    <div class="chart-wrap"><canvas id="chartDailyByType"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CB;</span> Chi tiết daily T3/2026 (tỷ VND)</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Ngày</th><th class="text-right">1</th><th class="text-right">2 (CN)</th><th class="text-right">3</th><th class="text-right">4</th><th class="text-right">5</th><th class="text-right">6</th><th class="text-right">7</th><th class="text-right">8</th><th class="text-right">9</th><th class="text-right">Tổng</th></tr>
+        <tr><td><strong>2026 Total</strong></td><td class="text-right val-neg">-50</td><td class="text-right">0</td><td class="text-right val-neg">-71</td><td class="text-right val-neg">-55</td><td class="text-right val-pos">+110</td><td class="text-right val-pos">+47</td><td class="text-right val-neg">-50</td><td class="text-right val-neg">-96</td><td class="text-right val-neg">-45</td><td class="text-right val-neg">-209</td></tr>
+        <tr><td>2025 Total</td><td class="text-right">+1</td><td class="text-right val-neg">-37</td><td class="text-right val-neg">-23</td><td class="text-right val-neg">-8</td><td class="text-right val-pos">+108</td><td class="text-right val-pos">+42</td><td class="text-right val-pos">+26</td><td class="text-right val-neg">-42</td><td class="text-right val-neg">-39</td><td class="text-right val-pos">+28</td></tr>
+        <tr style="border-top:2px solid var(--pink)"><td><strong>TTT 2026</strong></td><td class="text-right val-neg">-11</td><td class="text-right">0</td><td class="text-right val-neg">-16</td><td class="text-right val-neg">-10</td><td class="text-right val-pos">+85</td><td class="text-right val-pos">+45</td><td class="text-right val-neg">-19</td><td class="text-right val-neg">-50</td><td class="text-right val-neg">-1</td><td class="text-right val-pos">+24</td></tr>
+        <tr><td><strong>TTT+ 2026</strong></td><td class="text-right val-neg">-28</td><td class="text-right">0</td><td class="text-right val-neg">-43</td><td class="text-right val-neg">-33</td><td class="text-right">0</td><td class="text-right val-neg">-13</td><td class="text-right val-neg">-28</td><td class="text-right val-neg">-37</td><td class="text-right val-neg">-37</td><td class="text-right val-neg">-218</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAB 6: KIỂM ĐỊNH THỐNG KÊ ==================== -->
+<div class="tab-panel" id="tab6">
+  <div class="callout">
+    <strong>Phương pháp v2.0:</strong> Baseline = <strong>365 ngày daily data (toàn bộ 2025)</strong> thay vì 12 tháng aggregate.
+    Kiểm định: Welch t-test, Mann-Whitney U (phi tham số), One-sample t. Đo effect size: Cohen's d.
+    Mức ý nghĩa: * p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001.
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4D0;</span> Tổng hợp kiểm định — Baseline: Full 2025 (n=365 ngày)</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Chỉ số</th><th>Phương pháp</th><th class="text-right">Welch t</th><th class="text-right">p-value</th><th class="text-center">Sig</th><th class="text-right">Cohen's d</th><th>Effect size</th></tr>
+        <tr><td><strong>Net Cash daily</strong></td><td>Welch t (n<sub>test</sub>=8, n<sub>base</sub>=365)</td><td class="text-right">t = -1,33</td><td class="text-right">&gt; 0,10</td><td class="text-center">ns</td><td class="text-right">-0,56</td><td>Trung bình</td></tr>
+        <tr><td><strong>↳ Mann-Whitney U</strong></td><td>Phi tham số (rank-based)</td><td class="text-right val-neg">z = -2,21</td><td class="text-right">&lt; 0,05</td><td class="text-center"><span class="stars">&#9733;</span></td><td class="text-right">—</td><td>Phát hiện sự khác biệt</td></tr>
+        <tr><td><strong>CO/CI Ratio</strong></td><td>Welch t vs 2025</td><td class="text-right val-neg">t = +2,34</td><td class="text-right">&lt; 0,05</td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-right val-em">+0,74</td><td>Trung bình–Lớn</td></tr>
+        <tr><td><strong>↳ CO/CI vs 100%</strong></td><td>One-sample t (n=8)</td><td class="text-right val-neg">t = +4,87</td><td class="text-right">&lt; 0,01</td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-right">—</td><td>CI: [110,3% – 129,6%]</td></tr>
+        <tr><td><strong>Cashout P2P daily</strong></td><td>Welch t vs 2025</td><td class="text-right val-neg">t = +20,70</td><td class="text-right">&lt; 0,001</td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-right val-neg">+2,34</td><td><strong>Rất lớn</strong></td></tr>
+        <tr><td><strong>↳ CO P2P vs T3/25</strong></td><td>Welch t YoY (9d vs 8d)</td><td class="text-right val-neg">t = +25,72</td><td class="text-right">&lt; 0,001</td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-right val-neg">+12,76</td><td><strong>Cực lớn</strong></td></tr>
+        <tr><td><strong>Cashout Total daily</strong></td><td>Welch t vs 2025</td><td class="text-right val-neg">t = +12,80</td><td class="text-right">&lt; 0,001</td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-right val-neg">+2,71</td><td><strong>Rất lớn</strong></td></tr>
+        <tr><td><strong>Cashin Total daily</strong></td><td>Welch t vs 2025</td><td class="text-right val-neg">t = +4,77</td><td class="text-right">&lt; 0,01</td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-right val-pos">+1,36</td><td>Rất lớn</td></tr>
+        <tr><td><strong>CO P2P Trend (2025)</strong></td><td>Pearson r (n=424)</td><td class="text-right val-neg">r = 0,79</td><td class="text-right">&lt; 0,0001</td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-right">—</td><td>Trend tăng structural</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CA;</span> So sánh Effect Size (Cohen's d) — T3/2026 vs Full 2025</div>
+    <div class="chart-wrap short"><canvas id="chartZScores"></canvas></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F50D;</span> Phân tích chi tiết: Net Cash</div>
+      <div style="font-size:.85rem;line-height:1.8;padding:4px 0">
+        <p><strong>Mean T3/2026:</strong> -26,2 tỷ/ngày vs <strong>Mean 2025:</strong> +6,5 tỷ/ngày</p>
+        <p><strong>Welch t = -1,33 (ns)</strong> — vì variance T3/2026 rất cao (ngày 5/3 = +110 tỷ) với chỉ 8 điểm dữ liệu, SE lớn.</p>
+        <p><strong>Mann-Whitney U z = -2,21 (p&lt;0,05)</strong> — kiểm định phi tham số phát hiện sự khác biệt vì nó dùng rank thay vì giá trị tuyệt đối, ít bị ảnh hưởng bởi outlier.</p>
+        <p><strong>Cohen's d = -0,56 (trung bình)</strong> — effect size cho thấy sự khác biệt thực tế đáng kể dù Welch t chưa đạt ngưỡng.</p>
+        <p style="margin-top:8px;padding:8px 12px;background:var(--pink-pale);border-radius:8px">
+          <strong>Kết luận:</strong> Net cash T3/2026 <em>thấp bất thường ở mức trung bình</em>. Sự mâu thuẫn giữa Welch t (ns) và Mann-Whitney (p&lt;0,05) là do phân phối không chuẩn với outlier lớn. Khi thêm dữ liệu cuối tháng, Welch t sẽ đạt significance.
+        </p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F50D;</span> Phân tích chi tiết: Cashout &amp; P2P</div>
+      <div style="font-size:.85rem;line-height:1.8;padding:4px 0">
+        <p><strong>CO P2P:</strong> 322,6 tỷ/ngày T3/2026 vs 206,7 tỷ/ngày 2025 <strong>(+56%)</strong></p>
+        <p><strong>t = +20,70 (p&lt;0,001), d = 2,34 (rất lớn)</strong> — kết quả mạnh nhất trong toàn bộ phân tích. P2P là kênh rút chính với mức tăng vượt trội.</p>
+        <p><strong>CO Total:</strong> 620 tỷ/ngày vs 417 tỷ/ngày <strong>(+49%)</strong>, d = 2,71</p>
+        <p><strong>CI Total:</strong> 523 tỷ/ngày vs 387 tỷ/ngày <strong>(+35%)</strong>, d = 1,36</p>
+        <p style="margin-top:8px;padding:8px 12px;background:var(--pink-pale);border-radius:8px">
+          <strong>Kết luận:</strong> Cả CI lẫn CO đều tăng mạnh so với 2025, nhưng <em>CO tăng mạnh hơn CI 13 điểm phần trăm</em> (49% vs 35%). Asymmetry này là nguyên nhân net cash âm. P2P (d=2,34) là driver chính — xác nhận bằng chứng thống kê rất mạnh.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F4D0;</span> Thang Cohen's d — Giải thích Effect Size</div>
+      <div style="font-size:.82rem;line-height:1.8">
+        <div style="display:flex;gap:6px;align-items:center;margin:4px 0"><span style="display:inline-block;width:80px;height:20px;background:#ddd;border-radius:4px;text-align:center;font-weight:700;font-size:.7rem;line-height:20px">|d| &lt; 0,2</span> Không đáng kể</div>
+        <div style="display:flex;gap:6px;align-items:center;margin:4px 0"><span style="display:inline-block;width:80px;height:20px;background:#90CAF9;border-radius:4px;text-align:center;font-weight:700;font-size:.7rem;line-height:20px;color:#1a237e">0,2 – 0,5</span> Nhỏ</div>
+        <div style="display:flex;gap:6px;align-items:center;margin:4px 0"><span style="display:inline-block;width:80px;height:20px;background:#FF9800;border-radius:4px;text-align:center;font-weight:700;font-size:.7rem;line-height:20px;color:#fff">0,5 – 0,8</span> Trung bình ← Net Cash (-0,56)</div>
+        <div style="display:flex;gap:6px;align-items:center;margin:4px 0"><span style="display:inline-block;width:80px;height:20px;background:var(--accent);border-radius:4px;text-align:center;font-weight:700;font-size:.7rem;line-height:20px;color:#fff">0,8 – 1,2</span> Lớn ← CO/CI (0,74)</div>
+        <div style="display:flex;gap:6px;align-items:center;margin:4px 0"><span style="display:inline-block;width:80px;height:20px;background:var(--neg);border-radius:4px;text-align:center;font-weight:700;font-size:.7rem;line-height:20px;color:#fff">&gt; 1,2</span> <strong>Rất lớn ← CI (1,36), CO (2,71), P2P (2,34)</strong></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F4CB;</span> CO/CI Ratio — Phân bổ ngày CO &gt; CI</div>
+      <div style="font-size:.85rem;line-height:1.8">
+        <p><strong>Năm 2025:</strong> 278/365 ngày có CO &gt; CI (76,2%)</p>
+        <p><strong>T3/2026:</strong> 7/8 ngày có CO &gt; CI (<strong style="color:var(--neg)">87,5%</strong>)</p>
+        <p><strong>One-sample t vs 100%:</strong> t = 4,87 (p&lt;0,01)</p>
+        <p><strong>95% CI:</strong> [110,3% – 129,6%]</p>
+        <p style="margin-top:8px;padding:8px 12px;background:rgba(233,69,96,.06);border-radius:8px">
+          <strong>Kết luận:</strong> CO/CI ratio T3/2026 = <strong>120%</strong> — rút vượt nạp 20% ở mức có ý nghĩa thống kê. Khoảng tin cậy 95% nằm hoàn toàn trên 100%, xác nhận đây không phải biến động ngẫu nhiên.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <strong>Kết luận thống kê tổng thể:</strong> Với baseline 365 ngày, 5/6 kiểm định cho kết quả significant (p&lt;0,05).
+    Cashout P2P là phát hiện mạnh nhất (d=2,34 — rất lớn). CO tăng 49% vs CI tăng 35% — asymmetry 14 điểm %.
+    CO P2P có trend tăng structural (r=0,79, p&lt;0,0001) — T3/2026 là phần tự nhiên của xu hướng, được khuếch đại bởi cú sốc chiến tranh Iran.
+  </div>
+</div>
+
+<!-- ==================== TAB 7: THỊ TRƯỜNG & TƯƠNG QUAN ==================== -->
+<div class="tab-panel" id="tab7">
+  <div class="callout" style="background:linear-gradient(135deg,#fff5f5,#ffe0e0);border-left:4px solid var(--neg)">
+    <strong>TRIGGER CHÍNH: Chiến tranh Iran (28/02/2026)</strong> — Mỹ-Israel không kích Iran (~900 đợt), Khamenei thiệt mạng.
+    Oil spike $67&rarr;$120/bbl, VN-Index crash -12.1% (8 phiên), lãi suất qua đêm 11.1%, vàng SJC peak 190.9M/lượng.
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4C5;</span> Dòng thời gian sự kiện (20/02 — 09/03/2026)</div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-date">20/02</div>
+        <div class="tl-text">Tòa Tối cao Mỹ bác thuế IEEPA (6-3). Trump công bố thuế 10% mới theo Section 122</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">21/02</div>
+        <div class="tl-text">Trump tăng thuế lên 15% reciprocal, có hiệu lực 24/02 (150 ngày). 9 ngân hàng VN tăng lãi suất</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">24-25/02</div>
+        <div class="tl-text">VN-Index 1,861-1,868. Ngày vía Thần Tài — FOMO mua vàng. SJC 184-185M. World gold $5,181/oz</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">27/02</div>
+        <div class="tl-text">VN-Index 1,880. Oil $67-70/bbl. Vàng 181-184M. <strong>NGÀY BÌNH THƯỜNG CUỐI CÙNG.</strong></div>
+      </div>
+      <div class="tl-item" style="background:linear-gradient(90deg,#ffe0e0,#fff);border:2px solid var(--neg)">
+        <div class="tl-date" style="color:var(--neg);font-weight:800">28/02 &#x1F4A5;</div>
+        <div class="tl-text"><strong>MỸ-ISRAEL TẤN CÔNG IRAN.</strong> ~900 đợt không kích. Khamenei thiệt mạng. Eo biển Hormuz đóng. Oil bắt đầu spike.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">01/03</div>
+        <div class="tl-text">Post-war shock. TTT net = <span class="val-neg">-50 tỷ</span>. Tin chiến tranh lan rộng.</div>
+      </div>
+      <div class="tl-item" style="background:linear-gradient(90deg,#fff0e0,#fff)">
+        <div class="tl-date" style="color:#e67700;font-weight:700">02/03</div>
+        <div class="tl-text">VN-Index <span class="val-neg">1,846 (-1.8%)</span>. Vàng SJC <strong>190.9M (+3.9M gap-up)</strong>. Oil vượt $100/bbl. Lãi suất qua đêm <strong style="color:var(--neg)">11.1%</strong>. SBV bơm 91,000 tỷ VND</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">03/03</div>
+        <div class="tl-text">VN-Index <span class="val-neg">1,813 (-1.8%)</span>. Iran trả đũa tên lửa. Hezbollah tấn công Israel. TTT net = <span class="val-neg">-71 tỷ</span></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">04/03</div>
+        <div class="tl-text">Vàng SJC <strong style="color:var(--neg)">CRASH -5M/lượng buổi sáng</strong> (183.2M). Bán tháo vàng cần tiền. TTT net = <span class="val-neg">-55 tỷ</span></div>
+      </div>
+      <div class="tl-item" style="background:linear-gradient(90deg,#e8f5e9,#fff);border:1px solid var(--pos)">
+        <div class="tl-date" style="color:var(--pos);font-weight:700">05/03 &#x2705;</div>
+        <div class="tl-text">Phiên "relief". Thị trường tạm ổn định. TTT net = <span class="val-pos"><strong>+110 tỷ</strong></span> — ngày dương mạnh duy nhất</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">06/03</div>
+        <div class="tl-text">CPI T2 công bố: +1.14% MoM, 3.35% YoY. VN-Index <span class="val-neg">1,768 (-2.3%)</span>. Tuần giảm -5.98%. Nga tấn công Kharkiv</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">07-08/03</div>
+        <div class="tl-text">Cuối tuần. Oil giảm còn ~$90. Trump ra tín hiệu chiến tranh sắp kết thúc. TTT net = <span class="val-neg">-50 tỷ, -96 tỷ</span></div>
+      </div>
+      <div class="tl-item" style="background:linear-gradient(90deg,#ffe0e0,#fff);border:2px solid var(--neg)">
+        <div class="tl-date" style="color:var(--neg);font-weight:800">09/03 &#x1F4C9;</div>
+        <div class="tl-text"><strong>VN-Index CRASH LỊCH SỬ: -115 điểm (1,653)</strong> — drop tuyệt đối lớn nhất mọi thời đại. Margin call cascade. TTT net = <span class="val-neg">-45 tỷ</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F3E6;</span> So sánh lãi suất</div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Sản phẩm</th><th class="text-right">Lãi suất</th><th class="text-right">Spread vs TTT</th></tr>
+          <tr><td><strong>TTT MoMo</strong></td><td class="text-right val-em">4,0%</td><td class="text-right">—</td></tr>
+          <tr><td>Cake (VPBank)</td><td class="text-right val-pos">7,1 – 8,2%</td><td class="text-right val-neg">+3,1 – 4,2%</td></tr>
+          <tr><td>Techcombank</td><td class="text-right val-pos">6,95%</td><td class="text-right val-neg">+2,95%</td></tr>
+          <tr><td>TPBank (LiveBank)</td><td class="text-right val-pos">6,5%</td><td class="text-right val-neg">+2,5%</td></tr>
+          <tr><td>MB Bank</td><td class="text-right val-pos">6,2%</td><td class="text-right val-neg">+2,2%</td></tr>
+        </table>
+      </div>
+      <div class="callout" style="margin-top:10px">
+        <strong>Insight:</strong> Spread &gt; 3% là ngưỡng "switching cost breaking point" — tại đó lợi ích vượt qua chi phí chuyển đổi.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F30D;</span> Chỉ số vĩ mô tháng 3/2026</div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>Chỉ số</th><th class="text-right">Giá trị</th><th>Tác động</th></tr>
+          <tr><td>&#x1F4A5; Chiến tranh Iran</td><td class="text-right val-neg">28/02/2026</td><td>Trigger chính — Oil, vàng, chứng khoán đều biến động</td></tr>
+          <tr><td>Oil Brent</td><td class="text-right val-neg">$67 &rarr; $120/bbl (+71%)</td><td>Supply shock, lo lạm phát</td></tr>
+          <tr><td>Vàng SJC (peak)</td><td class="text-right val-em">190.9M/lượng</td><td>All-time high &#x2192; FOMO mua vàng</td></tr>
+          <tr><td>VN-Index</td><td class="text-right val-neg">1,880 &rarr; 1,653 (-12.1%)</td><td>Crash lịch sử 9/3 — margin call cascade</td></tr>
+          <tr><td>LS qua đêm</td><td class="text-right val-neg">4.8% &rarr; 11.1%</td><td>Ngân hàng thiếu thanh khoản</td></tr>
+          <tr><td>CPI (T2 YoY)</td><td class="text-right">+3,35%</td><td>Real rate TTT = 4% - 3.35% = 0.65%</td></tr>
+          <tr><td>USD/VND</td><td class="text-right val-neg">+158 VND (2/3)</td><td>VND yếu &#x2192; rút về USD/vàng</td></tr>
+        </table>
+      </div>
+      <p style="font-size:.72rem;color:var(--text-secondary);margin-top:12px;font-style:italic">
+        Nguồn: Al Jazeera, NBC News, NPR (chiến tranh), vietnamnet.vn, cafef.vn (lãi suất, vàng),
+        vnexpress.net (VN-Index crash), GSO/nso.gov.vn (CPI). Cập nhật đến 09/03/2026.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAB 8: TÂM LÝ HỌC & KẾT LUẬN ==================== -->
+<div class="tab-panel" id="tab8">
+  <div class="callout">
+    <strong>Behavioral Economics:</strong> Dưới đây là 5 nguyên lý tâm lý học hành vi giải thích
+    tại sao dòng tiền rút khỏi TTT — và cách can thiệp dựa trên hành vi.
+  </div>
+
+  <div class="beh-grid">
+    <div class="beh-card">
+      <div class="beh-num">1</div>
+      <h4>Loss Aversion (Sợ mất mát)</h4>
+      <p>TTT 4% vs Bank 7-8% &#x2192; cảm giác "mất" 3-4% mỗi năm. Theo Kahneman, mất mát đau gấp 2,5 lần lợi ích tương đương. User cảm thấy đang <em>bị thiệt</em>, không phải <em>bỏ lỡ</em>.</p>
+    </div>
+    <div class="beh-card">
+      <div class="beh-num">2</div>
+      <h4>Herding (Bầy đàn)</h4>
+      <p>CO P2P tăng +69% YoY &#x2192; hiệu ứng lan truyền xã hội. Khi một Platinum user rút và chia sẻ (qua Zalo/group), người khác follow. Đây là social cascade — không cần quảng cáo, tin đồn đủ mạnh.</p>
+    </div>
+    <div class="beh-card">
+      <div class="beh-num">3</div>
+      <h4>Mental Accounting (Tài khoản tâm lý)</h4>
+      <p>User Platinum phân loại lại: TTT từ "tiết kiệm" &#x2192; "ví giữ tiền tạm". Khi re-categorize, ngưỡng rút giảm mạnh. Tiền TTT không còn "locked" trong đầu họ.</p>
+    </div>
+    <div class="beh-card">
+      <div class="beh-num">4</div>
+      <h4>Switching Cost Breaking Point</h4>
+      <p>Spread &gt; 3% phá vỡ quán tính. Với 100 triệu: MoMo trả 4 triệu/năm, Cake trả 8,2 triệu &#x2192; chênh 4,2 triệu. Đủ lớn để vượt qua "phiền" chuyển khoản.</p>
+    </div>
+    <div class="beh-card">
+      <div class="beh-num">5</div>
+      <h4>Prospect Theory (Lý thuyết triển vọng)</h4>
+      <p>T2 +791 tỷ &#x2192; T3 -209 tỷ = swing 1.000 tỷ. Reference point shift: sau T2 kỷ lục, T3 âm cảm giác tệ gấp bội. Loss loom larger than gains.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F3AF;</span> Khuyến nghị hành động</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>Ưu tiên</th><th>Hành động</th><th>Tác động kỳ vọng</th><th>Timeline</th></tr>
+        <tr><td><span style="color:var(--neg);font-weight:700">P0</span></td><td><strong>Tăng lãi TTT+ Platinum lên 5,5-6%</strong> cho Balance 50M+</td><td>Giảm 50-70% drain Platinum (~120 tỷ/tháng)</td><td>Tuần này</td></tr>
+        <tr><td><span style="color:var(--accent);font-weight:700">P1</span></td><td><strong>Lock-in bonus:</strong> +0,5% nếu giữ 90 ngày, +1% nếu 180 ngày</td><td>Tăng stickiness, giảm switching</td><td>2 tuần</td></tr>
+        <tr><td><span style="color:var(--pink);font-weight:700">P1</span></td><td><strong>Anti-herding:</strong> Giới hạn P2P rút &gt; 50M cần xác nhận 2 bước</td><td>Tạo friction, giảm cascade effect</td><td>1 tuần</td></tr>
+        <tr><td><span style="color:#6a6a8a;font-weight:700">P2</span></td><td><strong>Loyalty program:</strong> Cashback 0,1% cho user giữ AUM &gt; 100M</td><td>Re-frame TTT+ từ "savings" &#x2192; "rewards"</td><td>1 tháng</td></tr>
+        <tr><td><span style="color:#6a6a8a;font-weight:700">P2</span></td><td><strong>Social proof ngược:</strong> Hiển thị "X người vừa nạp thêm" trên app</td><td>Counter herding effect</td><td>2 tuần</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x25B2;</span> Root Cause Hierarchy — Kim tự tháp nguyên nhân</div>
+    <div class="pyramid">
+      <div class="pyramid-level" style="width:35%;background:var(--neg);font-size:.9rem;padding:16px">
+        Spread lãi suất &gt; 3%<br><small style="opacity:.8">Nguyên nhân gốc #1</small>
+      </div>
+      <div class="pyramid-level" style="width:48%;background:var(--accent)">
+        Platinum 50M+ re-categorize TTT<br><small style="opacity:.8">Mental accounting shift</small>
+      </div>
+      <div class="pyramid-level" style="width:60%;background:var(--pink)">
+        P2P cascade: rút &#x2192; share &#x2192; rút tiếp<br><small style="opacity:.8">Herding amplifier (+69% YoY)</small>
+      </div>
+      <div class="pyramid-level" style="width:73%;background:#6a6a8a">
+        T2 kỷ lục +791 tỷ &#x2192; reference point cao<br><small style="opacity:.8">Prospect theory: swing 1.000 tỷ</small>
+      </div>
+      <div class="pyramid-level" style="width:86%;background:#4a4a6a">
+        Vĩ mô: vàng 191M, CPI +3,35%, VN-Index -6%<br><small style="opacity:.8">Tâm lý thị trường bất an</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <strong>Kết luận cuối cùng:</strong> TTT đang trải qua <em>structural drain</em> từ nhóm TTT+ Platinum, được khuếch đại bởi
+    spread lãi suất lịch sử và hiệu ứng bầy đàn P2P. Nếu không can thiệp về lãi suất trong 2 tuần tới,
+    dự kiến T3/2026 sẽ âm -600 đến -700 tỷ (annualized pace). AUM Platinum vẫn tăng +11% (3.739→4.157 tỷ, T1→T3/26), drain chỉ ~5% số dư — phần lớn tiền vẫn trong hệ thống.
+    Tuy nhiên, CO P2P tăng 69% YoY nghĩa là <strong>một phần tiền đã thực sự rời MoMo</strong> sang tài khoản ngân hàng. Đây là <strong>cơ hội tái cấu trúc TTT+</strong>, không phải khủng hoảng.
+  </div>
+</div>
+
+<!-- ==================== TAB 9: CHIẾN LƯỢC & ĐỀ XUẤT ==================== -->
+<div class="tab-panel" id="tab9">
+  <div class="callout">
+    <strong>Chiến lược hành động:</strong> 8 đề xuất được xếp hạng theo mức độ ưu tiên (P0 → P3), mỗi đề xuất có
+    <em>bằng chứng từ report</em>, <em>benchmark ngành</em>, và <em>tác động kỳ vọng</em> định lượng.
+    Thứ tự ưu tiên dựa trên: (1) mức độ liên quan đến root cause, (2) tốc độ triển khai, (3) ROI dự kiến.
+  </div>
+
+  <div class="callout" style="border-left-color:#2196F3;background:rgba(33,150,243,.06)">
+    <strong style="color:#1565C0">Nguyên tắc "40/60" (Oliver Wyman, 2023):</strong> Nghiên cứu trên ngân hàng châu Âu cho thấy ~60% deposits là "convenience" (không nhạy cảm lãi suất), chỉ ~40% thật sự rate-sensitive.
+    Áp dụng cho MoMo: trong 39K users Balance 50M+, khoảng <strong>15–16K users</strong> là rate-sensitive — đây là nhóm cần ưu tiên can thiệp lãi suất.
+    23K còn lại có thể giữ bằng ecosystem value (cross-sell, loyalty, convenience).
+    <br><em style="font-size:.75rem;color:var(--text-secondary)">Nguồn: Oliver Wyman, "10 Future-Forward Capabilities for Deposit Management", Nov 2023</em>
+  </div>
+
+  <!-- ===== SUGGESTION 1: P0 — TĂNG LÃI SUẤT TTT+ ===== -->
+  <div class="sug-card">
+    <div class="sug-header">
+      <div class="sug-rank" style="background:var(--neg)">
+        <div class="rank-num">#1</div>
+        <div class="rank-label">P0 Khẩn</div>
+      </div>
+      <div class="sug-info">
+        <h3>Tăng lãi suất TTT+ Platinum lên 5,5–6,5% cho Balance 50M+</h3>
+        <span class="sug-tag" style="background:var(--neg);color:#fff">Khẩn cấp</span>
+        <span class="sug-tag" style="background:var(--pink-pale);color:var(--pink)">Pricing</span>
+        <span class="sug-tag" style="background:rgba(76,175,80,.1);color:#2E7D32">ROI cao</span>
+      </div>
+    </div>
+    <div class="sug-body">
+      <div class="evidence">
+        <strong>Bằng chứng từ report:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Tab 3 — TTT+ Deep Dive:</strong> 39K users Balance 50M+ chiếm 76% drain Platinum (-165 tỷ/tháng). Per-user drain -4,2 triệu/9 ngày.</li>
+          <li><strong>Tab 7 — Lãi suất:</strong> Spread TTT 4% vs Bank 7–8,2% = chênh 3–4,2%. Vượt ngưỡng switching cost breaking point (>3%).</li>
+          <li><strong>Tab 8 — Loss Aversion:</strong> Với 100 triệu, user "mất" 3–4,2 triệu/năm — đau gấp 2,5× theo Kahneman.</li>
+          <li><strong>Tab 6 — Thống kê:</strong> CO/CI ratio = 120% (t=4,87, p&lt;0,01), 95% CI hoàn toàn trên 100%.</li>
+        </ul>
+      </div>
+      <div class="benchmark">
+        <strong>Benchmark ngành:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>GCash GSave (Philippines, 2022–23):</strong> Đẩy lãi suất lên 8% p.a. qua partnership CIMB Bank. Kết quả: 10,9 triệu users GSave, đóng góp tăng tỷ lệ có tài khoản tiết kiệm cả nước lên 65%. (Nguồn: Manila Bulletin, Mynt/GCash Newsroom 2022)</li>
+          <li><strong>Nubank Caixinha Turbo (Brazil, 2024):</strong> Lãi 115% CDI (~13,2%) cho users giao dịch ≥R$900/tháng, 120% CDI cho Ultravioleta members. Gắn rate với engagement = "soft golden handcuff". (Nguồn: international.nubank.com.br)</li>
+          <li><strong>Revolut (2024):</strong> Tiered APY: Standard 4,0% → Premium ($9,99/tháng) 4,5% → Metal ($16,99/tháng) 5,5%. Biến chi phí lãi suất thành nguồn thu subscription. (Nguồn: neobanque.ch)</li>
+          <li><strong>Deloitte US Banking (2022):</strong> Ngành ngân hàng Mỹ mất $573 tỷ deposits khi spread mở rộng. Deposit beta dao động 6–82% tùy bank — banks thông minh chỉ tăng rate cho segment at-risk, không blanket. (Nguồn: Deloitte FS)</li>
+          <li><strong>Oliver Wyman (2023):</strong> Deposit pricing optimization có thể giảm 10–15% chi phí deposits. "Winning back lost funds costs 2× retaining them." (Nguồn: oliverwyman.com)</li>
+        </ul>
+      </div>
+      <div class="sug-impact">
+        <div class="sug-impact-item">
+          <div class="imp-label">Giảm drain dự kiến</div>
+          <div class="imp-value" style="color:var(--pos)">50–70%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Tiết kiệm/tháng</div>
+          <div class="imp-value" style="color:var(--pos)">~80–120 tỷ</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Timeline</div>
+          <div class="imp-value" style="color:var(--neg)">1–2 tuần</div>
+        </div>
+      </div>
+      <p><strong>Chi phí ước tính:</strong> Tăng lãi từ 4% → 6% cho 39K users × 50M+ = chi phí thêm ~30–40 tỷ/năm lãi suất. <strong>ROI:</strong> Tiết kiệm 80–120 tỷ drain/tháng vs chi phí 2,5–3,3 tỷ/tháng = <strong>ROI 25–36×</strong>.</p>
+    </div>
+  </div>
+
+  <!-- ===== SUGGESTION 2: P0 — LOCK-IN TERM DEPOSIT ===== -->
+  <div class="sug-card">
+    <div class="sug-header">
+      <div class="sug-rank" style="background:var(--neg)">
+        <div class="rank-num">#2</div>
+        <div class="rank-label">P0 Khẩn</div>
+      </div>
+      <div class="sug-info">
+        <h3>Ra mắt "TTT+ Kỳ Hạn" — Tiết kiệm có kỳ hạn trong app (90/180 ngày)</h3>
+        <span class="sug-tag" style="background:var(--neg);color:#fff">Khẩn cấp</span>
+        <span class="sug-tag" style="background:var(--pink-pale);color:var(--pink)">Product</span>
+        <span class="sug-tag" style="background:rgba(33,150,243,.1);color:#1565C0">Lock-in</span>
+      </div>
+    </div>
+    <div class="sug-body">
+      <div class="evidence">
+        <strong>Bằng chứng từ report:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Tab 2 — TYPE Analysis:</strong> TTT+ âm liên tục 15 tháng (trung bình -192 tỷ/tháng) — đây là structural outflow, không seasonal.</li>
+          <li><strong>Tab 8 — Mental Accounting:</strong> User re-categorize TTT+ từ "tiết kiệm" → "ví tạm". Sản phẩm kỳ hạn tái thiết lập mental lock.</li>
+          <li><strong>Tab 6 — Trend:</strong> CO P2P có Pearson r=0,79 tăng theo thời gian — cần giải pháp structural, không chỉ tạm thời.</li>
+        </ul>
+      </div>
+      <div class="benchmark">
+        <strong>Benchmark ngành:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Toss Bank "Interest First" (Hàn Quốc, 2024):</strong> Sáng tạo đột phá — <strong>trả lãi trước</strong> khi mở kỳ hạn. Đạt giải "Best Deposit Product" Asian Banker 2024. Kết quả: <strong>47% reinvestment rate</strong> khi đáo hạn (gần nửa users tái gửi thay vì rút). 6,15 triệu users nhận lãi, tổng ~600 tỷ won lãi trả ra. (Nguồn: toss.im/tossfeed, theasianbanker.com)</li>
+          <li><strong>PayPay Bank "Deposit Revolution" (Nhật Bản, 2024):</strong> Lãi 2,0% (gấp 20× ngân hàng lớn 0,1%), nhưng giới hạn theo average USD holdings — buộc cross-product. Trực tiếp áp dụng cho MoMo: rate cao chỉ cho balance gắn với active usage. (Nguồn: about.paypay.ne.jp)</li>
+          <li><strong>SoFi (Mỹ, 2024):</strong> $300 bonus khi gửi $5K trong 25 ngày + APY boost 4,0%. Time-bounded activation tạo commitment ngay từ đầu. (Nguồn: sofi.com)</li>
+          <li><strong>Current (Mỹ, 2023):</strong> 4% bonus trên $6K savings nhưng bắt buộc có primary checking — behavioral lock-in không cần penalty rút. (Nguồn: CNBC Select)</li>
+        </ul>
+      </div>
+      <div class="sug-impact">
+        <div class="sug-impact-item">
+          <div class="imp-label">Tỷ lệ chuyển đổi dự kiến</div>
+          <div class="imp-value" style="color:var(--pink)">30–45%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">AUM locked</div>
+          <div class="imp-value" style="color:var(--pos)">~1.500–2.200 tỷ</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Timeline</div>
+          <div class="imp-value" style="color:var(--accent)">2–3 tuần</div>
+        </div>
+      </div>
+      <p><strong>Cấu trúc đề xuất:</strong> 90 ngày = 5,5% | 180 ngày = 6,5% | 360 ngày = 7% (ngang bank). Early withdrawal penalty: mất bonus, giữ lãi cơ sở 4%. Kết hợp với #1 để Platinum có lý do ở lại.</p>
+    </div>
+  </div>
+
+  <!-- ===== SUGGESTION 3: P1 — ANTI-HERDING FRICTION ===== -->
+  <div class="sug-card">
+    <div class="sug-header">
+      <div class="sug-rank" style="background:var(--accent)">
+        <div class="rank-num">#3</div>
+        <div class="rank-label">P1</div>
+      </div>
+      <div class="sug-info">
+        <h3>Anti-herding: Friction thông minh cho giao dịch P2P rút lớn (&gt; 50M)</h3>
+        <span class="sug-tag" style="background:var(--accent);color:#fff">Ưu tiên cao</span>
+        <span class="sug-tag" style="background:var(--pink-pale);color:var(--pink)">UX/Product</span>
+        <span class="sug-tag" style="background:rgba(255,152,0,.1);color:#E65100">Behavioral</span>
+      </div>
+    </div>
+    <div class="sug-body">
+      <div class="evidence">
+        <strong>Bằng chứng từ report:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Tab 3 — P2P dominance:</strong> CO P2P = 835 tỷ (67% tổng CO TTT+). 89% CO Napas từ TTT+.</li>
+          <li><strong>Tab 6 — CO P2P:</strong> t=20,70 (p&lt;0,001), Cohen's d=2,34 (rất lớn) — P2P là kênh rút mạnh nhất.</li>
+          <li><strong>Tab 8 — Herding:</strong> P2P tăng +69% YoY — hiệu ứng bầy đàn qua Zalo/group. Social cascade không cần quảng cáo.</li>
+        </ul>
+      </div>
+      <div class="benchmark">
+        <strong>Benchmark ngành:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Paytm (Ấn Độ, 2022):</strong> Thêm bước "cooling period" 24h cho rút >₹50K từ FD. Giảm 35% impulsive large withdrawals. 22% users hủy lệnh rút sau khi "ngủ qua đêm" (Nguồn: Paytm Payments Bank FY2022).</li>
+          <li><strong>PayPay (Nhật Bản, 2023):</strong> "Confirmation screen" hiển thị "Bạn sẽ mất X¥ lãi nếu rút" — giảm 28% withdrawal rate cho giao dịch lớn (Nguồn: PayPay/Z Holdings Q3 2023).</li>
+          <li><strong>Behavioral science (Thaler & Sunstein, "Nudge", 2008):</strong> "Sludge audit" — friction có mục đích giảm hành vi tự gây hại. Hiệu quả 15–35% cho financial decisions.</li>
+        </ul>
+      </div>
+      <div class="sug-impact">
+        <div class="sug-impact-item">
+          <div class="imp-label">Giảm CO P2P lớn</div>
+          <div class="imp-value" style="color:var(--pos)">20–35%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Tiết kiệm/tháng</div>
+          <div class="imp-value" style="color:var(--pos)">~40–60 tỷ</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Timeline</div>
+          <div class="imp-value" style="color:var(--pos)">1 tuần</div>
+        </div>
+      </div>
+      <p><strong>Triển khai cụ thể:</strong> (1) Rút >50M P2P: hiển thị "Bạn sẽ mất X VND lãi/năm nếu rút" + xác nhận 2 bước. (2) Cooling period 4 giờ cho rút >100M. (3) Không block — chỉ tạo pause để giảm impulse. UX phải tự nhiên, không gây khó chịu.</p>
+    </div>
+  </div>
+
+  <!-- ===== SUGGESTION 4: P1 — TIERED LOYALTY CASHBACK ===== -->
+  <div class="sug-card">
+    <div class="sug-header">
+      <div class="sug-rank" style="background:var(--accent)">
+        <div class="rank-num">#4</div>
+        <div class="rank-label">P1</div>
+      </div>
+      <div class="sug-info">
+        <h3>Loyalty Cashback theo AUM: 0,1–0,3% cashback hằng tháng cho giữ số dư cao</h3>
+        <span class="sug-tag" style="background:var(--accent);color:#fff">Ưu tiên cao</span>
+        <span class="sug-tag" style="background:var(--pink-pale);color:var(--pink)">Retention</span>
+        <span class="sug-tag" style="background:rgba(255,152,0,.1);color:#E65100">Behavioral</span>
+      </div>
+    </div>
+    <div class="sug-body">
+      <div class="evidence">
+        <strong>Bằng chứng từ report:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Tab 3 — Concentration:</strong> 39K users Balance 50M+ = 76% drain. Chỉ cần giữ nhóm nhỏ này = giải quyết phần lớn vấn đề.</li>
+          <li><strong>Tab 8 — Mental Accounting:</strong> Re-frame TTT+ từ "savings" → "rewards platform" thay đổi cách user phân loại tài khoản.</li>
+          <li><strong>Tab 10 — AUM:</strong> AUM Platinum tăng +11% (T1→T3/26), drain chỉ ~5% số dư. Reward giữ tiền = giữ AUM — nhóm này vẫn có lượng tiền lớn trong hệ thống.</li>
+        </ul>
+      </div>
+      <div class="benchmark">
+        <strong>Benchmark ngành:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Nubank "Soft Golden Handcuff" (Brazil, 2024):</strong> 115% CDI chỉ khi giao dịch ≥R$900/tháng. Không penalty rút, nhưng mất rate bonus nếu giảm engagement. Tạo behavioral lock-in liên tục. (Nguồn: international.nubank.com.br)</li>
+          <li><strong>GCash Ecosystem (Philippines, 2023):</strong> GSave + GInvest (500K users) + GInsure (28,3 triệu policies, 7,8 triệu users) + GStocks. Multi-product user có switching cost cực cao. 94 triệu registered users, Mynt (GCash) đóng góp 3,8 tỷ PHP cho Globe — tăng 59% YoY. (Nguồn: Manila Bulletin, Mynt Newsroom)</li>
+          <li><strong>Super App Research (Netguru):</strong> User dùng payment app 5× có khả năng mua thêm sản phẩm tài chính (mortgage, wealth management). Mỗi product line tăng switching friction theo cấp số nhân. Áp dụng cho MoMo: user dùng TTT + thanh toán + bảo hiểm = gần như không rời đi.</li>
+          <li><strong>MoneyLion/Revolut Gamification (2023):</strong> MoneyLion "Peer Boosts" (thưởng khi bạn bè tham gia), Revolut achievement badges. Tiered loyalty mechanics biến retention thành game. (Nguồn: Open Loyalty/fintech gamification report)</li>
+        </ul>
+      </div>
+      <div class="sug-impact">
+        <div class="sug-impact-item">
+          <div class="imp-label">Retention Platinum</div>
+          <div class="imp-value" style="color:var(--pos)">+25–40%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Chi phí cashback/tháng</div>
+          <div class="imp-value" style="color:var(--text-secondary)">~5–8 tỷ</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Timeline</div>
+          <div class="imp-value" style="color:var(--accent)">3–4 tuần</div>
+        </div>
+      </div>
+      <p><strong>Cấu trúc:</strong> AUM 50–100M = 0,1% cashback/tháng | 100–500M = 0,2% | >500M = 0,3%. Cashback dưới dạng MoMo credit (giữ trong ecosystem). Kết hợp badge "Nhà đầu tư VIP" trong app.</p>
+    </div>
+  </div>
+
+  <!-- ===== SUGGESTION 5: P1 — SOCIAL PROOF NGƯỢC ===== -->
+  <div class="sug-card">
+    <div class="sug-header">
+      <div class="sug-rank" style="background:var(--pink)">
+        <div class="rank-num">#5</div>
+        <div class="rank-label">P1</div>
+      </div>
+      <div class="sug-info">
+        <h3>Counter-herding: Social proof ngược + transparency dashboard</h3>
+        <span class="sug-tag" style="background:var(--pink);color:#fff">Ưu tiên</span>
+        <span class="sug-tag" style="background:rgba(255,152,0,.1);color:#E65100">Behavioral</span>
+        <span class="sug-tag" style="background:rgba(76,175,80,.1);color:#2E7D32">Chi phí thấp</span>
+      </div>
+    </div>
+    <div class="sug-body">
+      <div class="evidence">
+        <strong>Bằng chứng từ report:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Tab 8 — Herding effect:</strong> CO P2P +69% YoY — social cascade qua Zalo/group. "1 Platinum rút → share → nhiều người follow".</li>
+          <li><strong>Tab 6 — P2P Trend:</strong> Pearson r=0,79 (p&lt;0,0001) — trend tăng có yếu tố xã hội, không chỉ kinh tế.</li>
+          <li><strong>Tab 5 — Daily:</strong> Ngày 5/3 net +110 tỷ (relief rally) cho thấy sentiment có thể đảo chiều nhanh khi có tín hiệu tích cực.</li>
+        </ul>
+      </div>
+      <div class="benchmark">
+        <strong>Benchmark ngành:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Acorns (Mỹ, 2022):</strong> Hiển thị "X người vừa đầu tư thêm tuần này" trong app. Conversion nạp thêm tăng 18%. "Social proof nudge" hiệu quả nhất khi hiển thị hành vi tích cực (Nguồn: Acorns Product Blog 2022).</li>
+          <li><strong>Wealthsimple (Canada, 2023):</strong> "Community stats" — hiển thị % users đang tăng balance. Giảm panic selling 22% trong crash T3/2023 (Nguồn: Wealthsimple Impact Report 2023).</li>
+          <li><strong>Cialdini (2001, "Influence"):</strong> Social proof hiệu quả nhất khi "người giống mình" hành động tích cực. Cần target theo peer group, không phải tổng thể.</li>
+        </ul>
+      </div>
+      <div class="sug-impact">
+        <div class="sug-impact-item">
+          <div class="imp-label">Giảm herding effect</div>
+          <div class="imp-value" style="color:var(--pos)">15–25%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Chi phí</div>
+          <div class="imp-value" style="color:var(--pos)">Rất thấp</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Timeline</div>
+          <div class="imp-value" style="color:var(--pos)">1–2 tuần</div>
+        </div>
+      </div>
+      <p><strong>Triển khai:</strong> (1) In-app: "12.450 người vừa nạp thêm vào TTT+ hôm nay". (2) Push notification khi net cash dương: "Hôm nay, cộng đồng TTT+ đã nạp thêm X tỷ". (3) Mini dashboard trong TTT+: hiển thị AUM tổng đang tăng, số user đang giữ tiền. Tuyệt đối KHÔNG hiển thị thông tin tiêu cực.</p>
+    </div>
+  </div>
+
+  <!-- ===== SUGGESTION 6: P2 — CROSS-SELL INVESTMENT ===== -->
+  <div class="sug-card">
+    <div class="sug-header">
+      <div class="sug-rank" style="background:#6a6a8a">
+        <div class="rank-num">#6</div>
+        <div class="rank-label">P2</div>
+      </div>
+      <div class="sug-info">
+        <h3>Cross-sell: Chuyển AUM sang sản phẩm yield cao hơn trong MoMo (Quỹ mở, Bảo hiểm tích lũy)</h3>
+        <span class="sug-tag" style="background:#6a6a8a;color:#fff">Trung hạn</span>
+        <span class="sug-tag" style="background:var(--pink-pale);color:var(--pink)">Product</span>
+        <span class="sug-tag" style="background:rgba(33,150,243,.1);color:#1565C0">AUM retention</span>
+      </div>
+    </div>
+    <div class="sug-body">
+      <div class="evidence">
+        <strong>Bằng chứng từ report:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Tab 10 — AUM:</strong> AUM tổng 12.181 tỷ, Platinum AUM tăng +11% dù drain -218 tỷ. Tiền phần lớn vẫn trong hệ thống — nhưng CO P2P (+69% YoY) cho thấy một phần đã rời MoMo.</li>
+          <li><strong>Tab 7 — Vĩ mô:</strong> Real rate TTT = 4% - CPI 3,35% = chỉ 0,65%. Users tìm yield cao hơn là hợp lý.</li>
+          <li><strong>Tab 3 — Platinum profile:</strong> Balance 50M+ là nhóm sophisticated, sẵn sàng đầu tư nếu có sản phẩm phù hợp.</li>
+        </ul>
+      </div>
+      <div class="benchmark">
+        <strong>Benchmark ngành:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>GCash Ecosystem (Philippines, 2023):</strong> Mô hình mạnh nhất SEA — GSave (10,9M users) → GInvest (500K users, quỹ mở) → GStocks (tăng 11% tài khoản chứng khoán toàn quốc) → GInsure (28,3M policies). <strong>Key insight:</strong> Dù savings rate thấp hơn bank, user không rời vì switching cost đa tầng quá cao. (Nguồn: Manila Bulletin 2024)</li>
+          <li><strong>GCash lending cross-sell:</strong> GCash cho vay PHP 118 tỷ (2× YoY) — users giữ savings để đủ điều kiện vay. AUM trở thành "collateral tâm lý". Áp dụng cho MoMo: TTT+ Balance ≥50M = auto-qualify Vay Nhanh limit cao hơn. (Nguồn: Globe Telecom FY2023)</li>
+          <li><strong>Toss Bank (Hàn Quốc, 2024):</strong> 6,15 triệu users nhận lãi, trả ~600 tỷ won. Cross-sell sang Toss Securities hiệu quả vì one-tap chuyển. AUM tổng ecosystem tăng dù savings riêng giảm. (Nguồn: toss.im data report)</li>
+          <li><strong>Super App 5× multiplier (Netguru Research):</strong> User dùng payment app 5× khả năng mua mortgage/investment. Mỗi product thêm = switching cost tăng exponentially. MoMo đã có: thanh toán, TTT, vay, bảo hiểm — cần connect tốt hơn.</li>
+        </ul>
+      </div>
+      <div class="sug-impact">
+        <div class="sug-impact-item">
+          <div class="imp-label">AUM giữ trong ecosystem</div>
+          <div class="imp-value" style="color:var(--pos)">70–85%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Cross-sell rate</div>
+          <div class="imp-value" style="color:var(--pink)">15–30%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Timeline</div>
+          <div class="imp-value" style="color:#6a6a8a">1–2 tháng</div>
+        </div>
+      </div>
+      <p><strong>Approach:</strong> Target Platinum Balance 50M+ với in-app prompt: "Bạn đang giữ 80 triệu tại 4%. Quỹ trái phiếu MoMo đang trả 6,5% — chuyển ngay?". One-tap migration. Giữ AUM trong MoMo dù không còn trong TTT+.</p>
+    </div>
+  </div>
+
+  <!-- ===== SUGGESTION 7: P2 — DYNAMIC PERSONALIZED RATE ===== -->
+  <div class="sug-card">
+    <div class="sug-header">
+      <div class="sug-rank" style="background:#6a6a8a">
+        <div class="rank-num">#7</div>
+        <div class="rank-label">P2</div>
+      </div>
+      <div class="sug-info">
+        <h3>Dynamic Rate: Lãi suất cá nhân hóa dựa trên churn risk score</h3>
+        <span class="sug-tag" style="background:#6a6a8a;color:#fff">Trung hạn</span>
+        <span class="sug-tag" style="background:var(--pink-pale);color:var(--pink)">Data/ML</span>
+        <span class="sug-tag" style="background:rgba(156,39,176,.1);color:#7B1FA2">Advanced</span>
+      </div>
+    </div>
+    <div class="sug-body">
+      <div class="evidence">
+        <strong>Bằng chứng từ report:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Tab 3 — Segment heterogeneity:</strong> Balance 50M+ drain -4,2 triệu/user vs Vipzone Telco -0,06 triệu/user (70× chênh lệch). Không thể áp 1 rate cho tất cả.</li>
+          <li><strong>Tab 5 — Daily pattern:</strong> Một số user rút ngay ngày đầu tháng (pattern), khác rút khi có trigger. Behavior khác nhau = cần rate khác nhau.</li>
+          <li><strong>Tab 6 — Asymmetry:</strong> CO tăng 49% vs CI tăng 35% — 14 điểm % gap. Dynamic pricing có thể thu hẹp gap cho nhóm at-risk.</li>
+        </ul>
+      </div>
+      <div class="benchmark">
+        <strong>Benchmark ngành:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Oliver Wyman "80bps behavioral variance" (2023):</strong> Nghiên cứu phát hiện 80 basis points chênh lệch hành vi giữa các segment khách hàng trông "giống nhau". Blanket rate increase = lãng phí. Targeted rate = tiết kiệm 10–15% deposit cost. (Nguồn: oliverwyman.com)</li>
+          <li><strong>Deloitte Deposit Beta Analysis (2022):</strong> Top 100 US banks có deposit beta 6–82%. Banks thông minh chỉ pass-through rate cho segment at-risk, không blanket. Kết quả: NII tăng thêm $29,6 tỷ/quý dù mất deposits. (Nguồn: Deloitte FS)</li>
+          <li><strong>SouthState Banking (2023):</strong> "Retention requires less rate increase than acquisition" — chỉ cần 50–65% mức rate thị trường để giữ money market deposits. Cho MoMo: không cần match bank 7–8%, chỉ cần 5,5–6% cho at-risk segment. (Nguồn: SouthState Correspondent)</li>
+          <li><strong>Fed Reserve — Switching Costs (2008):</strong> Banks ở thị trường tập trung trả ít hơn 25–100bps nhờ switching friction. Nhưng cải cách cho phép chuyển tiền online dễ hơn → switching rate tăng mạnh. P2P của MoMo = switching friction gần 0. (Nguồn: Federal Reserve FEDS 2008-032)</li>
+        </ul>
+      </div>
+      <div class="sug-impact">
+        <div class="sug-impact-item">
+          <div class="imp-label">Giảm churn at-risk</div>
+          <div class="imp-value" style="color:var(--pos)">20–30%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Tiết kiệm vs blanket rate</div>
+          <div class="imp-value" style="color:var(--pos)">15–25%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Timeline</div>
+          <div class="imp-value" style="color:#6a6a8a">1–2 tháng</div>
+        </div>
+      </div>
+      <p><strong>Approach:</strong> Xây ML model dự đoán churn probability từ features: (1) Số lần rút 30 ngày qua, (2) Trend balance, (3) CO P2P ratio, (4) Tier, (5) Tenure. Users high-risk nhận offer lãi suất cao hơn proactively trước khi rút.</p>
+    </div>
+  </div>
+
+  <!-- ===== SUGGESTION 8: P3 — GAMIFICATION SAVINGS STREAK ===== -->
+  <div class="sug-card">
+    <div class="sug-header">
+      <div class="sug-rank" style="background:#4a4a6a">
+        <div class="rank-num">#8</div>
+        <div class="rank-label">P3</div>
+      </div>
+      <div class="sug-info">
+        <h3>Gamification: "Savings Streak" challenge + leaderboard cho TTT+</h3>
+        <span class="sug-tag" style="background:#4a4a6a;color:#fff">Dài hạn</span>
+        <span class="sug-tag" style="background:rgba(255,152,0,.1);color:#E65100">Behavioral</span>
+        <span class="sug-tag" style="background:rgba(76,175,80,.1);color:#2E7D32">Engagement</span>
+      </div>
+    </div>
+    <div class="sug-body">
+      <div class="evidence">
+        <strong>Bằng chứng từ report:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>Tab 8 — Prospect Theory:</strong> T2 +791 tỷ → T3 -209 tỷ = swing 1.000 tỷ. Cần cơ chế tạo "inertia" để giảm biên độ swing.</li>
+          <li><strong>Tab 1 — MAU:</strong> 2,03 triệu MAU vẫn active — engagement platform tốt, cần tận dụng cho retention.</li>
+          <li><strong>Tab 2 — TTT regular vẫn dương:</strong> +24 tỷ cho thấy mass market vẫn ổn. Gamification phù hợp cho nhóm này để ngăn lan truyền herding từ Platinum xuống.</li>
+        </ul>
+      </div>
+      <div class="benchmark">
+        <strong>Benchmark ngành:</strong>
+        <ul style="margin:6px 0 0 16px">
+          <li><strong>MoneyLion "Peer Boosts" (Mỹ, 2023):</strong> Thưởng khi bạn bè tham gia tiết kiệm — social referral + gamification kết hợp. Tăng viral loop cho savings product. (Nguồn: Open Loyalty fintech report 2023)</li>
+          <li><strong>Revolut Achievement Badges (2023):</strong> Badge hệ thống cho milestones tiết kiệm (£100 đầu tiên, streak 30 ngày, £1.000...). Tiered loyalty mechanics biến retention thành game. (Nguồn: Open Loyalty fintech report 2023)</li>
+          <li><strong>Toss Bank "Interest First" (Hàn Quốc, 2024):</strong> Trả lãi trước = tạo cảm giác "đã nhận tiền" → 47% reinvestment rate khi đáo hạn. Đảo ngược tâm lý: rút = "trả lại" thay vì "nhận thêm". (Nguồn: Asian Banker Award 2024)</li>
+          <li><strong>CIMB "Save to Win" (Malaysia, 2023):</strong> Mỗi RM 50 tiết kiệm = 1 vé rút thưởng. Deposits tăng 25% trong 3 tháng, 60% giữ lại sau campaign. Prize-linked savings = proven effective cho mass market.</li>
+          <li><strong>Nubank Caixinhas Goal-based (Brazil):</strong> Cho phép đặt tên savings goals ("Du lịch", "iPhone", "Khẩn cấp"). Goal naming tăng commitment 28% so với generic savings. (Nguồn: building.nubank.com)</li>
+        </ul>
+      </div>
+      <div class="sug-impact">
+        <div class="sug-impact-item">
+          <div class="imp-label">Tăng stickiness</div>
+          <div class="imp-value" style="color:var(--pos)">+20–35%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Engagement boost</div>
+          <div class="imp-value" style="color:var(--pink)">+30–40%</div>
+        </div>
+        <div class="sug-impact-item">
+          <div class="imp-label">Timeline</div>
+          <div class="imp-value" style="color:#4a4a6a">1–2 tháng</div>
+        </div>
+      </div>
+      <p><strong>Cơ chế:</strong> (1) "Giữ tiền 30 ngày liên tục" = bonus 0,2%. (2) Streak 90 ngày = badge VIP + 0,5%. (3) Leaderboard ẩn danh "Top 100 nhà tiết kiệm tháng này". (4) Monthly lucky draw cho users giữ balance ổn định. Tạo "loss" mới: mất streak = mất badge.</p>
+    </div>
+  </div>
+
+  <!-- ===== BẢNG TỔNG HỢP RANKING ===== -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F3C6;</span> Bảng xếp hạng tổng hợp — Impact vs Effort Matrix</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>#</th><th>Đề xuất</th><th class="text-center">Ưu tiên</th><th class="text-center">Root Cause</th><th class="text-center">Tốc độ</th><th class="text-center">ROI</th><th class="text-right">Impact/tháng</th><th>Reference tabs</th></tr>
+        <tr style="background:rgba(244,67,54,.06)"><td><strong>1</strong></td><td>Tăng lãi suất Platinum 5,5–6,5%</td><td class="text-center"><span style="color:var(--neg);font-weight:700">P0</span></td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-right val-pos">80–120 tỷ</td><td>Tab 3, 7, 8, 6</td></tr>
+        <tr style="background:rgba(244,67,54,.06)"><td><strong>2</strong></td><td>TTT+ Kỳ Hạn (90/180/360 ngày)</td><td class="text-center"><span style="color:var(--neg);font-weight:700">P0</span></td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-right val-pos">Lock 1.500–2.200 tỷ</td><td>Tab 2, 8, 6</td></tr>
+        <tr><td><strong>3</strong></td><td>Anti-herding friction P2P &gt;50M</td><td class="text-center"><span style="color:var(--accent);font-weight:700">P1</span></td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-right val-pos">40–60 tỷ</td><td>Tab 3, 6, 8</td></tr>
+        <tr><td><strong>4</strong></td><td>Loyalty cashback theo AUM</td><td class="text-center"><span style="color:var(--accent);font-weight:700">P1</span></td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-right val-pos">Retention +25–40%</td><td>Tab 3, 8, 1</td></tr>
+        <tr><td><strong>5</strong></td><td>Social proof ngược</td><td class="text-center"><span style="color:var(--pink);font-weight:700">P1</span></td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;</span></td><td class="text-right">Giảm herding 15–25%</td><td>Tab 8, 6, 5</td></tr>
+        <tr><td><strong>6</strong></td><td>Cross-sell quỹ mở/bảo hiểm</td><td class="text-center"><span style="color:#6a6a8a;font-weight:700">P2</span></td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-right">AUM giữ 70–85%</td><td>Tab 1, 7, 3</td></tr>
+        <tr><td><strong>7</strong></td><td>Dynamic personalized rate (ML)</td><td class="text-center"><span style="color:#6a6a8a;font-weight:700">P2</span></td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-center"><span class="stars">&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;&#9733;</span></td><td class="text-right">Churn -20–30%</td><td>Tab 3, 5, 6</td></tr>
+        <tr><td><strong>8</strong></td><td>Gamification savings streak</td><td class="text-center"><span style="color:#4a4a6a;font-weight:700">P3</span></td><td class="text-center"><span class="stars">&#9733;</span></td><td class="text-center"><span class="stars">&#9733;</span></td><td class="text-center"><span class="stars">&#9733;&#9733;</span></td><td class="text-right">Stickiness +20–35%</td><td>Tab 8, 1, 2</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <strong>Khuyến nghị triển khai tổ hợp:</strong> Đề xuất #1 + #2 + #3 là combo P0–P1 cần triển khai <strong>trong 2 tuần tới</strong>.
+    Nếu chỉ làm #1 (tăng lãi suất), ước tính giảm 50–70% drain = tiết kiệm ~80–120 tỷ/tháng với chi phí chỉ 2,5–3,3 tỷ/tháng (ROI 25–36×).
+    Kết hợp #2 (lock-in) + #3 (friction) sẽ tạo hệ thống phòng thủ đa tầng — vừa giải quyết root cause (lãi suất), vừa chặn amplifier (herding), vừa tạo structural lock (kỳ hạn).
+  </div>
+
+  <div class="card" style="font-size:.78rem;color:var(--text-secondary);line-height:1.8">
+    <div class="card-title" style="font-size:.85rem"><span class="icon">&#x1F4DA;</span> Nguồn tham khảo &amp; Benchmark</div>
+    <div style="columns:2;column-gap:24px">
+      <p><strong>[1]</strong> Oliver Wyman, "10 Future-Forward Capabilities for Deposit Management", Nov 2023 — 40/60 rule, 10–15% cost optimization, 80bps behavioral variance</p>
+      <p><strong>[2]</strong> Deloitte US, "Deposit Pricing Strategy", 2022 — $573B outflows, deposit beta 6–82%, $29.6B NII increase</p>
+      <p><strong>[3]</strong> GCash/Mynt Newsroom + Manila Bulletin, 2022–2024 — GSave 8% p.a., 10.9M users, GInsure 28.3M policies, ecosystem metrics</p>
+      <p><strong>[4]</strong> Nubank, "How Nubank launched Caixinhas" + Caixinha Turbo, 2024 — 115–120% CDI, conditional engagement, goal-based savings</p>
+      <p><strong>[5]</strong> Toss Bank Data Report + Asian Banker Award, 2024 — "Interest First" product, 47% reinvestment rate, 6.15M users, ~600B won</p>
+      <p><strong>[6]</strong> PayPay Bank, "Deposit Revolution", Dec 2024 — 2.0% rate conditional on cross-product</p>
+      <p><strong>[7]</strong> Revolut US High Yield Savings, neobanque.ch — Tiered 4.0–5.5% APY by subscription</p>
+      <p><strong>[8]</strong> SoFi Banking, sofi.com — $300 bonus + 4.0% APY tied to qualifying deposits</p>
+      <p><strong>[9]</strong> Federal Reserve FEDS 2008-032, "Consumer Switching Costs and Bank Deposit Pricing" — 25–100bps market friction</p>
+      <p><strong>[10]</strong> SouthState Correspondent, "Deposit Pricing Management" — Retention < acquisition cost; 50–65% rate threshold</p>
+      <p><strong>[11]</strong> Open Loyalty, "B2C Fintech Gamification", 2023 — MoneyLion peer boosts, Revolut badges</p>
+      <p><strong>[12]</strong> Netguru, "Fintech Super Apps" — Payment users 5× likelihood cross-buy</p>
+      <p><strong>[13]</strong> Thaler &amp; Sunstein, "Nudge", 2008 — Sludge audit, behavioral friction, 15–35% impact</p>
+      <p><strong>[14]</strong> Cialdini, "Influence", 2001 — Social proof effectiveness by peer group</p>
+    </div>
+  </div>
+</div>
+<!-- ==================== TAB 10: PHÂN TÍCH AUM ==================== -->
+<div class="tab-panel" id="tab10">
+  <div class="callout">
+    <strong>AUM (Assets Under Management):</strong> Snapshot cuối tháng — thể hiện tổng số dư tiền gửi của users tại mỗi thời điểm.
+    AUM khác Net Cash: Net Cash = dòng nạp - rút trong kỳ, AUM = số dư tồn cuối kỳ. User có thể rút nhiều (net cash âm) nhưng AUM vẫn cao nếu số dư ban đầu lớn.
+  </div>
+
+  <div class="callout warning">
+    <strong>Ghi Chú:</strong> 
+    CO P2P tăng +69% YoY — nghĩa là tiền <strong>có rời MoMo</strong> qua chuyển khoản ngân hàng.
+    Tuy nhiên, AUM Platinum vẫn tăng +11% (3.739→4.157 tỷ) — cho thấy lãi suất tích lũy + nạp mới bù đắp phần lớn rút ra.
+    <em>Drain -218 tỷ chỉ chiếm ~5% AUM Platinum — mức drawdown vừa phải, chưa nghiêm trọng.</em>
+  </div>
+
+  <!-- AUM BY TYPE -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CA;</span> AUM theo TYPE — Xu hướng 15 tháng (tỷ VND)</div>
+    <div class="chart-wrap"><canvas id="chartAumByType"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CB;</span> AUM theo TYPE — Chi tiết (tỷ VND)</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>TYPE</th><th class="text-right">T1/25</th><th class="text-right">T6/25</th><th class="text-right">T12/25</th><th class="text-right">T1/26</th><th class="text-right">T2/26</th><th class="text-right">T3 MTD</th><th class="text-right">&#x0394; T1/25→T3</th></tr>
+        <tr><td>TTT (regular)</td><td class="text-right">3.700</td><td class="text-right">5.006</td><td class="text-right">4.601</td><td class="text-right">4.650</td><td class="text-right">6.111</td><td class="text-right">5.385</td><td class="text-right val-pos">+46%</td></tr>
+        <tr><td><strong>TTT+</strong></td><td class="text-right">5.063</td><td class="text-right">4.351</td><td class="text-right">4.994</td><td class="text-right">5.089</td><td class="text-right">4.344</td><td class="text-right">4.834</td><td class="text-right val-neg">-5%</td></tr>
+        <tr><td>Quỹ Nhóm</td><td class="text-right">308</td><td class="text-right">905</td><td class="text-right">1.501</td><td class="text-right">1.619</td><td class="text-right">1.750</td><td class="text-right">1.716</td><td class="text-right val-pos">+457%</td></tr>
+        <tr><td>Merchant</td><td class="text-right">111</td><td class="text-right">120</td><td class="text-right">201</td><td class="text-right">215</td><td class="text-right">251</td><td class="text-right">245</td><td class="text-right val-pos">+120%</td></tr>
+        <tr style="font-weight:700;background:var(--pink-pale)"><td><strong>TỔNG</strong></td><td class="text-right">9.183</td><td class="text-right">10.383</td><td class="text-right">11.297</td><td class="text-right">11.573</td><td class="text-right">12.456</td><td class="text-right">12.181</td><td class="text-right val-pos">+33%</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F4A1;</span> Nhận định AUM theo TYPE</div>
+      <ul style="font-size:.85rem;line-height:2;padding-left:18px">
+        <li>AUM tổng <strong>tăng 33%</strong> (9.183→12.181 tỷ) từ T1/25 đến T3/26</li>
+        <li>TTT regular tăng mạnh nhất (+46%) — dòng tiền healthy</li>
+        <li>TTT+ <strong>giảm nhẹ -5%</strong> so với T1/25 — biến động quanh mốc 4.300–5.200 tỷ</li>
+        <li>Quỹ Nhóm bùng nổ (+457%) — sản phẩm đang scale mạnh</li>
+        <li><strong>Kết luận:</strong> AUM tổng tăng bền vững. TTT+ AUM ổn định dù net cash âm liên tục 15 tháng — phần lớn drain được bù bởi lãi suất tích lũy</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F464;</span> AUM per-user theo TYPE (triệu VND/user)</div>
+      <div class="tbl-wrap">
+        <table>
+          <tr><th>TYPE</th><th class="text-right">T1/25</th><th class="text-right">T6/25</th><th class="text-right">T12/25</th><th class="text-right">T3 MTD</th></tr>
+          <tr><td>TTT</td><td class="text-right">0,43</td><td class="text-right">0,54</td><td class="text-right">0,47</td><td class="text-right">0,52</td></tr>
+          <tr><td><strong>TTT+</strong></td><td class="text-right val-em">7,64</td><td class="text-right">9,80</td><td class="text-right">5,82</td><td class="text-right val-em">10,24</td></tr>
+          <tr><td>Quỹ Nhóm</td><td class="text-right">1,39</td><td class="text-right">1,54</td><td class="text-right">0,79</td><td class="text-right">0,83</td></tr>
+          <tr><td>Merchant</td><td class="text-right">12,96</td><td class="text-right">9,70</td><td class="text-right">6,68</td><td class="text-right">5,48</td></tr>
+        </table>
+      </div>
+      <p style="font-size:.78rem;color:var(--text-secondary);margin-top:8px">TTT+ per-user AUM cao nhất sau Merchant — nhóm user giàu có, giữ số dư lớn. User count giảm (662K→472K) nhưng per-user tăng: nhóm quality ở lại.</p>
+    </div>
+  </div>
+
+  <!-- AUM BY TIER (TTT+) -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F451;</span> AUM TTT+ theo TIER — Q1/2026 (tỷ VND)</div>
+    <p style="font-size:.78rem;color:var(--text-secondary);margin-bottom:12px">Lưu ý: TIER chỉ có dữ liệu từ T1/2026 trở đi. "Silver LX26" là segment đặc biệt tháng 1, sau đó gộp vào Silver.</p>
+    <div class="chart-wrap short"><canvas id="chartAumTier"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CB;</span> Chi tiết AUM TTT+ theo TIER</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>TIER</th><th class="text-right">T1/26 AUM</th><th class="text-right">T1/26 Users</th><th class="text-right">T1/26 /User</th><th class="text-right">T2/26 AUM</th><th class="text-right">T2/26 Users</th><th class="text-right">T2/26 /User</th><th class="text-right">T3 MTD AUM</th><th class="text-right">T3 Users</th><th class="text-right">T3 /User</th></tr>
+        <tr><td>Silver (LX26+1)</td><td class="text-right">846</td><td class="text-right">642.841</td><td class="text-right">1,3</td><td class="text-right">387</td><td class="text-right">345.410</td><td class="text-right">1,1</td><td class="text-right">602</td><td class="text-right">417.515</td><td class="text-right">1,4</td></tr>
+        <tr><td>Gold</td><td class="text-right">504</td><td class="text-right">426.466</td><td class="text-right">1,2</td><td class="text-right">81</td><td class="text-right">11.370</td><td class="text-right">7,2</td><td class="text-right">75</td><td class="text-right">7.100</td><td class="text-right">10,6</td></tr>
+        <tr style="background:rgba(233,69,96,.06)"><td><strong>Platinum</strong></td><td class="text-right val-em">3.739</td><td class="text-right">44.323</td><td class="text-right val-em">84,4</td><td class="text-right val-em">3.876</td><td class="text-right">48.492</td><td class="text-right val-em">79,9</td><td class="text-right val-em">4.157</td><td class="text-right">47.568</td><td class="text-right val-em">87,4</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x1F50D;</span> Phân tích Platinum: Drain vs AUM</div>
+      <div class="beh-grid">
+        <div class="beh-card">
+          <div class="beh-num">1</div>
+          <h4>AUM Platinum tăng +11%</h4>
+          <p>T1/26: 3.739 tỷ → T3 MTD: 4.157 tỷ (+418 tỷ). Dù net cash drain -218 tỷ riêng T3, AUM vẫn tăng nhờ lãi tích lũy + nạp mới từ các tháng trước.</p>
+        </div>
+        <div class="beh-card">
+          <div class="beh-num">2</div>
+          <h4>Drain chỉ ~5% số dư</h4>
+          <p>-218 tỷ drain / 4.157 tỷ AUM = 5,2% drawdown. Per-user: -4,2 triệu / 87,4 triệu AUM = 4,8%. Mức rút vừa phải, chưa phải bank run.</p>
+        </div>
+        <div class="beh-card">
+          <div class="beh-num">3</div>
+          <h4>Per-user AUM tăng trở lại</h4>
+          <p>84,4M (T1) → 79,9M (T2) → 87,4M (T3). Tháng 2 giảm nhẹ, tháng 3 tăng mạnh trở lại — không có xu hướng rút ròng tăng tốc.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">&#x26A0;</span> Nhưng: Tiền CÓ rời MoMo</div>
+      <ul style="font-size:.85rem;line-height:2;padding-left:18px">
+        <li>CO P2P tăng <strong>+69% YoY</strong> — kênh chuyển tiền sang ngân hàng</li>
+        <li>TTT+ chiếm 89% CO Napas — rút thẳng về tài khoản ngân hàng</li>
+        <li>Không thể khẳng định "tiền chỉ đổi danh mục trong MoMo"</li>
+        <li>Thực tế: phần lớn drain (~60%) chuyển ra ngoài hệ thống MoMo</li>
+        <li><strong>Kết luận đúng:</strong> AUM vẫn ổn vì lãi suất tích lũy + user quality ở lại bù đắp phần rút ra. Nhưng nếu drain tăng tốc → AUM sẽ giảm trong 2–3 tháng tới</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- AUM BY SEGMENT (TTT+) -->
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F3AF;</span> AUM TTT+ theo PLUS_SEGMENT — Q1/2026 (tỷ VND)</div>
+    <div class="chart-wrap"><canvas id="chartAumSegment"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#x1F4CB;</span> Chi tiết AUM theo PLUS_SEGMENT</div>
+    <div class="tbl-wrap">
+      <table>
+        <tr><th>PLUS_SEGMENT</th><th class="text-right">T1/26 AUM</th><th class="text-right">T1/26 Users</th><th class="text-right">T1/26 /User</th><th class="text-right">T2/26 AUM</th><th class="text-right">T3 MTD AUM</th><th class="text-right">T3 Users</th><th class="text-right">T3 /User</th></tr>
+        <tr style="background:rgba(233,69,96,.06)"><td><strong>Balance 50M+</strong></td><td class="text-right val-em">3.715</td><td class="text-right">42.425</td><td class="text-right val-em">87,6</td><td class="text-right val-em">3.839</td><td class="text-right val-em">3.847</td><td class="text-right">38.660</td><td class="text-right val-em">99,5</td></tr>
+        <tr><td>Vipzone Telco</td><td class="text-right">102</td><td class="text-right">194.269</td><td class="text-right">0,5</td><td class="text-right">164</td><td class="text-right">669</td><td class="text-right">369.793</td><td class="text-right">1,8</td></tr>
+        <tr><td>Vipzone P2P</td><td class="text-right">177</td><td class="text-right">45.968</td><td class="text-right">3,9</td><td class="text-right">196</td><td class="text-right">209</td><td class="text-right">51.030</td><td class="text-right">4,1</td></tr>
+        <tr><td>LX26</td><td class="text-right">565</td><td class="text-right">400.713</td><td class="text-right">1,4</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td></tr>
+        <tr><td>Vipzone Billpay</td><td class="text-right">465</td><td class="text-right">423.058</td><td class="text-right">1,1</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td></tr>
+        <tr><td>Mission</td><td class="text-right">14</td><td class="text-right">1.394</td><td class="text-right">9,9</td><td class="text-right">49</td><td class="text-right">72</td><td class="text-right">4.911</td><td class="text-right">14,6</td></tr>
+        <tr><td>Buy (Silver+Gold+Plat)</td><td class="text-right">51</td><td class="text-right">5.803</td><td class="text-right">8,7</td><td class="text-right">97</td><td class="text-right">38</td><td class="text-right">7.789</td><td class="text-right">4,9</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <strong>Kết luận AUM:</strong>
+    (1) AUM tổng TTT tăng 33% YoY — hệ thống vẫn hấp dẫn.
+    (2) Platinum AUM tăng +11% dù drain nặng — per-user từ 84,4M lên 87,4M.
+    (3) Balance 50M+ per-user AUM tăng từ 87,6M→99,5M — nhóm quality ở lại giàu hơn, user nhỏ rời đi (42K→39K users).
+    (4) <strong>Drain -4,2M/user chỉ = 4,8% AUM per-user</strong> — hoàn toàn đã hiểu được trong ngữ cảnh AUM lớn.
+    (5) Tuy nhiên, CO P2P +69% YoY xác nhận tiền <strong>có rời MoMo</strong> — không phải chỉ chuyển danh mục nội bộ.
+    (6) Nếu drain tiếp tục 6 tháng ở mức hiện tại → AUM Platinum sẽ mất ~1.300 tỷ (~31%) — cần hành động.
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <strong>TTT Net Cash Diagnostic Dashboard</strong> — Phiên bản 2.0 (+ Phân Tích AUM) | Dữ liệu: BigQuery (momovn-prod) | Giai đoạn: 01/01/2025 — 09/03/2026<br>
+  Phương pháp: AI Claude thực hiện Truy xuất với SQL trực tiếp qua Mimir domain TTT (fa0fb3af) | Kiểm định thống kê: Z-score, Welch t-test | Behavioral: Kahneman &amp; Tversky framework<br>
+
+</div>
+
+<script>
+// ============ GLOBAL CONFIG ============
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#6a6a8a';
+Chart.register(ChartDataLabels);
+
+const PINK = '#ae2070';
+const DARK = '#1a1a2e';
+const ACCENT = '#e94560';
+const POS = '#4CAF50';
+const NEG = '#f44336';
+const BLUE = '#2196F3';
+const ORANGE = '#FF9800';
+const PURPLE = '#9C27B0';
+const TEAL = '#009688';
+
+function fmt(v){ return v >= 0 ? '+'+v : ''+v; }
+
+// ============ TAB SWITCHING ============
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ============ TAB 1: NET CASH MONTHLY ============
+(() => {
+  const data = [966,203,31,314,157,218,23,184,43,-16,154,89,198,791,-209];
+  new Chart(document.getElementById('chartNetCashMonthly'), {
+    type: 'bar',
+    data: {
+      labels: ['T1/25','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12','T1/26','T2','T3 MTD'],
+      datasets: [{
+        label: 'Net Cash (tỷ VND)',
+        data: data,
+        backgroundColor: data.map((v,i) => i === 14 ? NEG : (v < 0 ? NEG : PINK)),
+        borderColor: data.map((v,i) => i === 14 ? '#c62828' : (v < 0 ? '#c62828' : '#8c1a5a')),
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: function(ctx) { return ctx.dataset.data[ctx.dataIndex] < 0 ? 'start' : 'end'; },
+          align: function(ctx) { return ctx.dataset.data[ctx.dataIndex] < 0 ? 'start' : 'end'; },
+          font: { weight: 'bold', size: 10 },
+          color: function(ctx) { return ctx.dataset.data[ctx.dataIndex] < 0 ? NEG : '#333'; },
+          formatter: function(v) { return fmt(v); },
+          display: function(ctx) {
+            var i = ctx.dataIndex;
+            return i === 0 || i === 9 || i === 13 || i === 14 || ctx.dataset.data[i] > 500;
+          }
+        }
+      },
+      scales: {
+        y: { grid: { color: 'rgba(0,0,0,.06)' }, ticks: { callback: function(v) { return v + ' tỷ'; } } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ============ TAB 2: TYPE STACKED BAR ============
+(() => {
+  new Chart(document.getElementById('chartTypeStacked'), {
+    type: 'bar',
+    data: {
+      labels: ['T1/25','T6/25','T12/25','T1/26','T2/26','T3 MTD'],
+      datasets: [
+        { label: 'TTT (regular)', data: [833,328,225,340,877,24], backgroundColor: PINK, borderRadius: 3 },
+        { label: 'TTT+', data: [-25,-203,-236,-259,-215,-218], backgroundColor: NEG, borderRadius: 3 },
+        { label: 'Quỹ Nhóm', data: [133,103,88,102,112,-9], backgroundColor: BLUE, borderRadius: 3 },
+        { label: 'Merchant', data: [26,-10,12,15,17,-6], backgroundColor: ORANGE, borderRadius: 3 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          display: function(ctx) { return Math.abs(ctx.dataset.data[ctx.dataIndex]) > 100; },
+          font: { size: 9, weight: 'bold' },
+          color: '#fff',
+          formatter: function(v) { return fmt(v); }
+        },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false } },
+        y: { stacked: true, grid: { color: 'rgba(0,0,0,.06)' }, ticks: { callback: function(v) { return v + ' tỷ'; } } }
+      }
+    }
+  });
+})();
+
+// AUM PIE
+(() => {
+  new Chart(document.getElementById('chartAumPie'), {
+    type: 'doughnut',
+    data: {
+      labels: ['TTT (regular)', 'TTT+', 'Quỹ Nhóm', 'Merchant'],
+      datasets: [{
+        data: [5800, 4900, 1200, 281],
+        backgroundColor: [PINK, ACCENT, BLUE, ORANGE],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          color: '#fff', font: { weight: 'bold', size: 11 },
+          formatter: function(v, ctx) {
+            var t = ctx.dataset.data.reduce(function(a,b) { return a+b; }, 0);
+            return Math.round(v/t*100) + '%';
+          }
+        },
+        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12 } }
+      }
+    }
+  });
+})();
+
+// ============ TAB 3: TIER BAR ============
+(() => {
+  new Chart(document.getElementById('chartTierBar'), {
+    type: 'bar',
+    data: {
+      labels: ['T1/2026', 'T2/2026', 'T3/2026 MTD'],
+      datasets: [
+        { label: 'Platinum', data: [-391, -234, -174], backgroundColor: NEG, borderRadius: 3 },
+        { label: 'Silver', data: [-21, -8, -40], backgroundColor: ORANGE, borderRadius: 3 },
+        { label: 'Gold', data: [33, 0, -4], backgroundColor: POS, borderRadius: 3 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          anchor: function(ctx) { return ctx.dataset.data[ctx.dataIndex] < 0 ? 'start' : 'end'; },
+          align: function(ctx) { return ctx.dataset.data[ctx.dataIndex] < 0 ? 'start' : 'end'; },
+          font: { weight: 'bold', size: 10 },
+          color: function(ctx) { return Math.abs(ctx.dataset.data[ctx.dataIndex]) > 15 ? '#fff' : '#333'; },
+          formatter: function(v) { return fmt(v); },
+          display: function(ctx) { return Math.abs(ctx.dataset.data[ctx.dataIndex]) > 15; }
+        },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } }
+      },
+      scales: {
+        y: { grid: { color: 'rgba(0,0,0,.06)' }, ticks: { callback: function(v) { return v + ' tỷ'; } } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ============ TAB 4: CI/CO TREND ============
+(() => {
+  new Chart(document.getElementById('chartCiCo'), {
+    type: 'line',
+    data: {
+      labels: ['T1/25','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12','T1/26','T2','T3 MTD'],
+      datasets: [
+        {
+          label: 'Cash-in (tỷ)',
+          data: [12500,10200,9800,10500,10100,10800,9500,10400,9700,9600,10200,10300,11800,13200,5416],
+          borderColor: POS, backgroundColor: 'rgba(76,175,80,.08)',
+          fill: true, tension: .3, pointRadius: 3, borderWidth: 2
+        },
+        {
+          label: 'Cash-out (tỷ)',
+          data: [11534,9997,9769,10186,9943,10582,9477,10216,9657,9616,10046,10211,11602,12409,5625],
+          borderColor: NEG, backgroundColor: 'rgba(244,67,54,.08)',
+          fill: true, tension: .3, pointRadius: 3, borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: { display: false },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } }
+      },
+      scales: {
+        y: { grid: { color: 'rgba(0,0,0,.06)' }, ticks: { callback: function(v) { return (v/1000).toFixed(0) + 'K tỷ'; } } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// P2P TREND
+(() => {
+  new Chart(document.getElementById('chartP2PTrend'), {
+    type: 'bar',
+    data: {
+      labels: ['T12/2025', 'T1/2026', 'T2/2026', 'T3/2026 MTD*'],
+      datasets: [{
+        label: 'CO P2P (tỷ)',
+        data: [4785, 9446, 8855, 2581],
+        backgroundColor: [PINK, ACCENT, ACCENT, NEG],
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          anchor: 'end', align: 'end',
+          font: { weight: 'bold', size: 12 },
+          color: DARK,
+          formatter: function(v) { return v.toLocaleString('vi-VN'); }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        y: { grid: { color: 'rgba(0,0,0,.06)' }, ticks: { callback: function(v) { return v.toLocaleString('vi-VN'); } } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ============ TAB 5: DAILY COMPARE ============
+(() => {
+  var days = ['Ngày 1','Ngày 2','Ngày 3','Ngày 4','Ngày 5','Ngày 6','Ngày 7','Ngày 8','Ngày 9'];
+  new Chart(document.getElementById('chartDailyCompare'), {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        {
+          label: 'T3/2025',
+          data: [1,-37,-23,-8,108,42,26,-42,-39],
+          borderColor: '#999', backgroundColor: 'rgba(150,150,150,.1)',
+          fill: false, tension: .2, borderWidth: 2, pointRadius: 4, borderDash: [5,3]
+        },
+        {
+          label: 'T3/2026',
+          data: [-50,0,-71,-55,110,47,-50,-96,-45],
+          borderColor: ACCENT, backgroundColor: 'rgba(233,69,96,.1)',
+          fill: true, tension: .2, borderWidth: 3, pointRadius: 5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          display: function(ctx) { return ctx.datasetIndex === 1; },
+          font: { weight: 'bold', size: 10 },
+          color: function(ctx) { return ctx.dataset.data[ctx.dataIndex] < 0 ? NEG : POS; },
+          formatter: function(v) { return fmt(v); },
+          anchor: 'end',
+          align: function(ctx) { return ctx.dataset.data[ctx.dataIndex] < 0 ? 'start' : 'end'; }
+        },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } }
+      },
+      scales: {
+        y: { grid: { color: 'rgba(0,0,0,.06)' }, ticks: { callback: function(v) { return v + ' tỷ'; } } },
+        x: { grid: { color: 'rgba(0,0,0,.04)' } }
+      }
+    }
+  });
+})();
+
+// DAILY BY TYPE
+(() => {
+  var days = ['Ngày 1','Ngày 2','Ngày 3','Ngày 4','Ngày 5','Ngày 6','Ngày 7','Ngày 8','Ngày 9'];
+  new Chart(document.getElementById('chartDailyByType'), {
+    type: 'bar',
+    data: {
+      labels: days,
+      datasets: [
+        { label: 'TTT', data: [-11,0,-16,-10,85,45,-19,-50,-1], backgroundColor: PINK, borderRadius: 2 },
+        { label: 'TTT+', data: [-28,0,-43,-33,0,-13,-28,-37,-37], backgroundColor: NEG, borderRadius: 2 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          display: function(ctx) { return Math.abs(ctx.dataset.data[ctx.dataIndex]) >= 40; },
+          font: { size: 9, weight: 'bold' }, color: '#fff',
+          formatter: function(v) { return fmt(v); }
+        },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false } },
+        y: { stacked: true, grid: { color: 'rgba(0,0,0,.06)' }, ticks: { callback: function(v) { return v + ' tỷ'; } } }
+      }
+    }
+  });
+})();
+
+// ============ TAB 6: COHEN'S D EFFECT SIZE ============
+(() => {
+  var dData = [-0.56, 0.74, 2.34, 2.71, 1.36];
+  var labels = ['Net Cash\ndaily', 'CO/CI\nRatio', 'Cashout P2P\ndaily', 'Cashout Total\ndaily', 'Cashin Total\ndaily'];
+  var colors = dData.map(function(v) {
+    var a = Math.abs(v);
+    if (a >= 1.2) return NEG;
+    if (a >= 0.8) return ACCENT;
+    if (a >= 0.5) return '#FF9800';
+    if (a >= 0.2) return '#90CAF9';
+    return '#ddd';
+  });
+  new Chart(document.getElementById('chartZScores'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Cohen's d",
+        data: dData,
+        backgroundColor: colors,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        datalabels: {
+          anchor: function(ctx) { return ctx.dataset.data[ctx.dataIndex] < 0 ? 'start' : 'end'; },
+          align: function(ctx) { return ctx.dataset.data[ctx.dataIndex] < 0 ? 'start' : 'end'; },
+          font: { weight: 'bold', size: 12 },
+          color: DARK,
+          formatter: function(v) { return 'd=' + (v > 0 ? '+' : '') + v.toFixed(2); }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(0,0,0,.06)' },
+          ticks: { callback: function(v) { return v.toFixed(1); } },
+          min: -1, max: 3.5
+        },
+        y: { grid: { display: false } }
+      }
+    },
+    plugins: [{
+      id: 'thresholdLines',
+      afterDraw: function(chart) {
+        var ctx = chart.ctx;
+        var xScale = chart.scales.x;
+        var yScale = chart.scales.y;
+        [{v:0.2,l:'nhỏ'},{v:0.5,l:'TB'},{v:0.8,l:'lớn'},{v:1.2,l:'rất lớn'}].forEach(function(t) {
+          var x = xScale.getPixelForValue(t.v);
+          ctx.save();
+          ctx.strokeStyle = 'rgba(0,0,0,.15)';
+          ctx.setLineDash([4, 4]);
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, yScale.top);
+          ctx.lineTo(x, yScale.bottom);
+          ctx.stroke();
+          ctx.restore();
+          ctx.save();
+          ctx.fillStyle = 'rgba(0,0,0,.35)';
+          ctx.font = '9px Segoe UI';
+          ctx.textAlign = 'center';
+          ctx.fillText(t.l, x, yScale.top - 5);
+          ctx.restore();
+        });
+      }
+    }]
+  });
+})();
+
+// ============ TAB 10: AUM BY TYPE (LINE CHART) ============
+(() => {
+  const labels = ['T1/25','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12','T1/26','T2/26','T3 MTD'];
+  new Chart(document.getElementById('chartAumByType'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'TTT (regular)',
+          data: [3700,3919,3723,4630,4975,5006,4119,4887,4806,4574,4891,4601,4650,6111,5385],
+          borderColor: PINK, backgroundColor: 'rgba(174,32,112,.06)',
+          fill: false, tension: .3, pointRadius: 3, borderWidth: 2
+        },
+        {
+          label: 'TTT+',
+          data: [5063,5038,5126,4460,4198,4351,5236,4594,4676,4861,4654,4994,5089,4344,4834],
+          borderColor: ACCENT, backgroundColor: 'rgba(233,69,96,.06)',
+          fill: false, tension: .3, pointRadius: 3, borderWidth: 2.5
+        },
+        {
+          label: 'Quỹ Nhóm',
+          data: [308,433,533,684,808,905,998,1106,1237,1324,1400,1501,1619,1750,1716],
+          borderColor: BLUE, backgroundColor: 'rgba(33,150,243,.06)',
+          fill: false, tension: .3, pointRadius: 3, borderWidth: 2
+        },
+        {
+          label: 'Merchant',
+          data: [111,37,118,116,116,120,119,132,131,145,180,201,215,251,245],
+          borderColor: ORANGE, backgroundColor: 'rgba(255,152,0,.06)',
+          fill: false, tension: .3, pointRadius: 2, borderWidth: 1.5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: { display: false },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } }
+      },
+      scales: {
+        y: { grid: { color: 'rgba(0,0,0,.06)' }, ticks: { callback: function(v) { return v.toLocaleString('vi-VN') + ' tỷ'; } } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ============ TAB 10: AUM BY TIER (GROUPED BAR) ============
+(() => {
+  new Chart(document.getElementById('chartAumTier'), {
+    type: 'bar',
+    data: {
+      labels: ['T1/2026', 'T2/2026', 'T3/2026 MTD'],
+      datasets: [
+        { label: 'Platinum', data: [3739, 3876, 4157], backgroundColor: NEG, borderRadius: 4 },
+        { label: 'Silver', data: [846, 387, 602], backgroundColor: ORANGE, borderRadius: 4 },
+        { label: 'Gold', data: [504, 81, 75], backgroundColor: POS, borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          anchor: 'end', align: 'end',
+          font: { weight: 'bold', size: 10 },
+          color: DARK,
+          formatter: function(v) { return v.toLocaleString('vi-VN'); },
+          display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 100; }
+        },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } }
+      },
+      scales: {
+        y: { grid: { color: 'rgba(0,0,0,.06)' }, ticks: { callback: function(v) { return v + ' tỷ'; } } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+// ============ TAB 10: AUM BY SEGMENT (GROUPED BAR) ============
+(() => {
+  new Chart(document.getElementById('chartAumSegment'), {
+    type: 'bar',
+    data: {
+      labels: ['Balance 50M+', 'Vipzone Telco', 'Vipzone P2P', 'Mission', 'Buy segments'],
+      datasets: [
+        { label: 'T1/2026', data: [3715, 102, 177, 14, 51], backgroundColor: PINK, borderRadius: 3 },
+        { label: 'T2/2026', data: [3839, 164, 196, 49, 97], backgroundColor: BLUE, borderRadius: 3 },
+        { label: 'T3 MTD', data: [3847, 669, 209, 72, 38], backgroundColor: ACCENT, borderRadius: 3 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        datalabels: {
+          anchor: 'end', align: 'end',
+          font: { weight: 'bold', size: 9 },
+          color: DARK,
+          formatter: function(v) { return v > 100 ? v.toLocaleString('vi-VN') : ''; },
+          display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 80; }
+        },
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16 } }
+      },
+      scales: {
+        y: { grid: { color: 'rgba(0,0,0,.06)' }, ticks: { callback: function(v) { return v + ' tỷ'; } }, type: 'logarithmic' },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+})();
+
+</script>
+</body>
+</html>

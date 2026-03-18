@@ -1,0 +1,13 @@
+-- Q10: MFU Type End-of-Month (Individual)
+SELECT
+  GRASS_DATE,
+  SUM(CASE WHEN MFU_TYPE = '0.Churn' THEN 1 ELSE 0 END) AS mfu_churn,
+  SUM(CASE WHEN MFU_TYPE = '1.New' THEN 1 ELSE 0 END) AS mfu_new,
+  SUM(CASE WHEN MFU_TYPE = '2.Retain' THEN 1 ELSE 0 END) AS mfu_retain,
+  SUM(CASE WHEN MFU_TYPE = '3.Reactive' THEN 1 ELSE 0 END) AS mfu_reactive
+FROM `momovn-prod.BU_FI.mart_ttt_daily_user_record`
+WHERE IS_MP = 'Individual'
+  AND (GRASS_DATE = LAST_DAY(GRASS_DATE) OR GRASS_DATE = DATE '2026-03-09')
+  AND GRASS_DATE BETWEEN '2025-01-01' AND '2026-03-09'
+GROUP BY GRASS_DATE
+ORDER BY GRASS_DATE
