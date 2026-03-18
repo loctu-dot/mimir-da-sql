@@ -78,8 +78,48 @@ curl -s --request GET \
 
 Use this if the domain file is missing or stale. Parse and regenerate via `scripts/json_to_md.py`.
 
-**If schema is unclear:**
-- Try a simple `SELECT * FROM <table> LIMIT 1` to see column names
+**If schema is unclear — use INFORMATION_SCHEMA first (NOT `SELECT *`):**
+
+```sql
+SELECT
+    column_name,
+    data_type,
+    is_partitioning_column  -- 'YES' = partition column → use as filter
+FROM
+    `momovn-prod.BU_FI.INFORMATION_SCHEMA.COLUMNS`
+WHERE
+    table_name = '<table_name>'
+ORDER BY
+    ordinal_position
+```
+
+This gives you column names, data types, and partition columns **without scanning any data**.
+
+Then to inspect actual rows:
+- If a partition column exists (`is_partitioning_column = 'YES'`): filter by it (e.g., first day of current month or D-1) and `LIMIT 10`
+- If NO partition column returns `'YES'`: `SELECT * FROM <table> LIMIT 10` is acceptable — but **warn the user** about resource cost (full table scan, potentially GB+ of data processed)
+
+**Why:** `SELECT * LIMIT N` without partition filter still triggers a full table scan on partitioned tables — extremely wasteful on large BQ tables.
+
+**Undocumented columns — MANDATORY discovery step:**
+
+After getting schema from INFORMATION_SCHEMA, check against `lt-memory/domains/<domain>.md` and `lt-memory/knowledge/<domain>.md`. For any column that **has no metadata description** (no explanation of what the column means):
+
+1. Query distinct values for that column within a single day (use partition filter):
+   ```sql
+   SELECT DISTINCT <unknown_column>
+   FROM `<table>`
+   WHERE <partition_col> = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+   LIMIT 50
+   ```
+   If the table has no partition column, `SELECT DISTINCT <unknown_column> FROM <table> LIMIT 50` is acceptable.
+
+2. **Show the distinct values to the user** and ask them to either:
+   - Provide the column meaning (which you then save as a training memory entry in `lt-memory/knowledge/<domain>.md`)
+   - Escalate to the Data Owner of that product domain for clarification
+
+3. **Do NOT guess or assume column semantics.** Using an undocumented column without understanding it risks producing misleading analysis.
+
 - Record what you find in `lt-memory/knowledge/<domain>.md`
 
 ### Step 3: Write the SQL
@@ -376,8 +416,10 @@ The data landscape is **already mapped** (65 domains discovered 2026-03-03). See
 ### When you encounter an unknown domain or metric
 
 1. **Check domain file:** `lt-memory/domains/<domain>.md` — contains tables, columns, types, and memory entries
-2. **Probe with a simple query:** `SELECT * FROM <table> LIMIT 5` to see actual data shape
-3. **Record everything** in `lt-memory/knowledge/<domain>.md`
+2. **Probe schema first** — query `INFORMATION_SCHEMA.COLUMNS` to get column names, types, and partition columns (zero data scan cost)
+3. **Sample actual rows** — use partition column as filter (D-1 or first of month) + `LIMIT 10`. Only `SELECT * LIMIT` if no partition column exists (warn user about resource cost).
+4. **Discover undocumented columns** — for any column without metadata description, query `SELECT DISTINCT <col> ... LIMIT 50` (filtered by partition if available), show results to user, and ask for clarification or escalation to Data Owner.
+5. **Record everything** in `lt-memory/knowledge/<domain>.md`
 
 ### When domain knowledge is stale
 
